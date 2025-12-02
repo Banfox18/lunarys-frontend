@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Conversation, Message, ChatRequest } from '@/types/chat'
 import { chatService } from '@/services/api'
+import { useSettingsStore } from './settings'
 
 export const useChatStore = defineStore('chat', () => {
   // 状态
@@ -82,7 +83,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  // 流式发送消息
+  // 在现有的 sendMessage 函数中修改
   const sendMessage = async (content: string) => {
     if (!content.trim()) return
 
@@ -96,16 +97,16 @@ export const useChatStore = defineStore('chat', () => {
 
     // 添加用户消息
     const userMessage: Message = {
-      conversationId: currentConversation.value!.id,
+      id: Date.now(),
       role: 'user',
       content: content.trim(),
       createdAt: new Date().toISOString()
     }
     messages.value.push(userMessage)
 
-    // 添加空的AI消息用于流式更新
+    // 添加AI占位消息
     const aiMessage: Message = {
-      conversationId: currentConversation.value!.id,
+      id: Date.now() + 1,
       role: 'assistant',
       content: '',
       createdAt: new Date().toISOString()
@@ -114,9 +115,23 @@ export const useChatStore = defineStore('chat', () => {
 
     isLoading.value = true
 
-    // 准备请求数据 - 发送完整的对话历史
+    // 获取设置
+    const settings = useSettingsStore()
+
+    // 根据设置选择传输模式
+    if (settings.enableStreaming) {
+      console.log('[Response mode] Streaming')
+      await sendStreamingMessage(content, aiMessage)
+    } else {
+      console.log('[Response mode] NonStreaming')
+      await sendNonStreamingMessage(content, aiMessage)
+    }
+  }
+
+// 提取流式发送逻辑到单独函数
+  const sendStreamingMessage = async (content: string, aiMessage: Message) => {
     const request: ChatRequest = {
-      // 如果是临时会话，不发送conversationId，让后端创建新会话
+      message: content,
       conversationId: currentConversation.value!.id > 0 ? currentConversation.value!.id : undefined,
       model: currentModel.value,
       messages: messages.value.slice(0, -1).map(msg => ({
@@ -126,7 +141,6 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     try {
-      // 开始流式传输
       abortController.value = await chatService.sendMessageStream(
         request,
         // 内容回调 - 实时更新消息内容
@@ -141,39 +155,57 @@ export const useChatStore = defineStore('chat', () => {
           isLoading.value = false
           abortController.value = null
         },
-        // 完成回调 - 更新会话ID
+        // 完成回调
         (conversationId) => {
-          console.log('✅ 收到后端生成的会话ID:', conversationId)
-
-          // 更新当前会话的ID
-          if (currentConversation.value) {
+          // 更新会话ID
+          if (currentConversation.value && currentConversation.value.id === -1) {
             currentConversation.value.id = conversationId
-            currentConversation.value.updatedAt = new Date().toISOString()
           }
-
-          // 更新会话列表中的ID
-          const conversationInList = conversations.value.find(c => c.id === -1)
-          if (conversationInList) {
-            conversationInList.id = conversationId
-          }
-
-          // 更新会话标题（如果是第一条消息）
-          if (messages.value.length === 2) {
-            updateConversationTitle(content)
-          }
-
           isLoading.value = false
           abortController.value = null
         }
       )
-
     } catch (error) {
-      console.error('发送消息失败:', error)
+      console.error('流式请求失败:', error)
       const lastIndex = messages.value.length - 1
-      messages.value[lastIndex].content = '抱歉，发送消息时出现错误，请稍后重试。'
+      messages.value[lastIndex].content = `请求失败: ${error.message}`
       isLoading.value = false
     }
   }
+
+// 添加非流式发送函数
+  const sendNonStreamingMessage = async (content: string, aiMessage: Message) => {
+    const request: ChatRequest = {
+      message: content,
+      conversationId: currentConversation.value!.id > 0 ? currentConversation.value!.id : undefined,
+      model: currentModel.value,
+      messages: messages.value.slice(0, -1).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }))
+    }
+
+    try {
+      const response = await chatService.sendMessage(request)
+
+      // 更新AI消息内容
+      const lastIndex = messages.value.length - 1
+      messages.value[lastIndex].content = response.content
+
+      // 更新会话ID
+      if (currentConversation.value && currentConversation.value.id === -1) {
+        currentConversation.value.id = response.conversationId
+      }
+
+    } catch (error) {
+      console.error('非流式请求失败:', error)
+      const lastIndex = messages.value.length - 1
+      messages.value[lastIndex].content = `请求失败: ${error.message}`
+    } finally {
+      isLoading.value = false
+    }
+  }
+
 
   const updateConversationTitle = (firstMessage: string) => {
     if (currentConversation.value && currentConversation.value.title === '新对话') {

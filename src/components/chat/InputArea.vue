@@ -2,6 +2,8 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useChatStore } from '@/stores/chat'
+import { useSettingsStore } from '@/stores/settings'
+import { Promotion, VideoPause, Paperclip, Picture, MagicStick } from '@element-plus/icons-vue'
 
 interface Props {
   disabled?: boolean
@@ -14,12 +16,17 @@ const emit = defineEmits<{
 }>()
 
 const chatStore = useChatStore()
+const settingsStore = useSettingsStore()
+
 const inputText = ref('')
 const textareaRef = ref<HTMLTextAreaElement>()
 
+// 计算属性
 const isEmpty = computed(() => !inputText.value.trim())
 const isStreaming = computed(() => chatStore.isLoading)
+const enableStreaming = computed(() => settingsStore.enableStreaming)
 
+// 发送消息
 const handleSend = () => {
   if (isEmpty.value || props.disabled) return
 
@@ -35,10 +42,18 @@ const handleSend = () => {
   })
 }
 
+// 停止流式传输
 const handleStop = () => {
   chatStore.stopStreaming()
 }
 
+// 切换流式传输
+const toggleStreaming = () => {
+  settingsStore.toggleStreaming()
+  settingsStore.saveSettings()
+}
+
+// 键盘事件处理
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
@@ -46,6 +61,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 }
 
+// 调整textarea高度
 const adjustTextareaHeight = () => {
   if (textareaRef.value) {
     textareaRef.value.style.height = 'auto'
@@ -60,8 +76,22 @@ const handleInput = () => {
 
 <template>
   <div class="input-area">
+    <!-- 模式指示器 -->
+    <div class="mode-indicator">
+      <div class="mode-toggle" @click="toggleStreaming" :title="enableStreaming ? '点击切换为完整模式' : '点击切换为流式模式'">
+        <div class="mode-dot" :class="{ streaming: enableStreaming }"></div>
+        <span class="mode-text">
+          {{ enableStreaming ? '流式模式' : '完整模式' }}
+        </span>
+        <span class="mode-hint">
+          {{ enableStreaming ? '实时响应' : '完整响应' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- 输入区域 -->
     <div class="input-container">
-      <!-- 文本输入区域 -->
+      <!-- 文本输入框 -->
       <textarea
         ref="textareaRef"
         v-model="inputText"
@@ -106,14 +136,33 @@ const handleInput = () => {
       </div>
 
       <div class="toolbar-right">
-        <div v-if="isStreaming" class="streaming-indicator">
+        <!-- 流式传输指示器 -->
+        <div v-if="isStreaming && enableStreaming" class="streaming-indicator">
           <div class="pulse-dot"></div>
           <span>AI正在输入...</span>
         </div>
+
+        <!-- 完整模式指示器 -->
+        <div v-if="isStreaming && !enableStreaming" class="complete-indicator">
+          <div class="loading-dot"></div>
+          <span>正在生成完整响应...</span>
+        </div>
+
         <el-button type="text" size="small" class="tool-button">
           <el-icon><MagicStick /></el-icon>
         </el-button>
       </div>
+    </div>
+  </div>
+  <div class="chat-header">
+    <div class="streaming-toggle">
+      <button
+        @click="toggleStreaming"
+        :class="{ active: enableStreaming }"
+      >
+        {{ enableStreaming ? '🔴 流式' : '⚪ 完整' }}
+      </button>
+      <span class="hint">{{ enableStreaming ? '实时响应' : '完整响应' }}</span>
     </div>
   </div>
 </template>
@@ -132,6 +181,53 @@ const handleInput = () => {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
+/* 模式指示器 */
+.mode-indicator {
+  margin-bottom: 8px;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 16px;
+  background: var(--surface-dark-hover);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.mode-toggle:hover {
+  background: var(--surface-dark-active);
+}
+
+.mode-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.mode-dot.streaming {
+  background: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.mode-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.mode-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* 输入容器 */
 .input-container {
   display: flex;
   align-items: flex-end;
@@ -153,7 +249,7 @@ const handleInput = () => {
 }
 
 .message-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-tertiary);
 }
 
 .message-input:disabled {
@@ -161,27 +257,19 @@ const handleInput = () => {
   cursor: not-allowed;
 }
 
-.send-button {
-  flex: 0 0 40px;
+/* 按钮样式 */
+.send-button,
+.stop-button {
+  flex-shrink: 0;
+  width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: var(--primary-color);
-  border: none;
-  transition: all var(--transition-normal) ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.send-button:not(:disabled):hover {
-  background: var(--primary-light);
-  transform: scale(1.05);
+  padding: 0;
 }
 
 .send-button:disabled {
-  background: var(--text-muted);
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 /* 工具栏 */
@@ -194,31 +282,50 @@ const handleInput = () => {
   border-top: 1px solid var(--border-dark);
 }
 
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .tool-button {
+  padding: 4px;
   color: var(--text-secondary);
-  transition: all var(--transition-fast) ease;
 }
 
 .tool-button:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-dark-hover);
 }
 
-/* 添加流式指示器样式 */
-.streaming-indicator {
+/* 指示器样式 */
+.streaming-indicator,
+.complete-indicator {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--primary-color);
   font-size: 12px;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--surface-dark-hover);
 }
 
 .pulse-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--primary-color);
   animation: pulse 1.5s infinite;
+}
+
+.loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warning-color);
+  animation: spin 1s linear infinite;
 }
 
 @keyframes pulse {
@@ -232,17 +339,12 @@ const handleInput = () => {
   }
 }
 
-.stop-button {
-  flex: 0 0 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: var(--warning-color);
-  border: none;
-  transition: all var(--transition-normal) ease;
-}
-
-.stop-button:hover {
-  background: #dc2626;
-  transform: scale(1.05);
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

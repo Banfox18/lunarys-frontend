@@ -1,18 +1,21 @@
-// src/services/api.ts - 修复SSE解析版本
+// src/services/api.ts
 import type { ChatRequest, Conversation, Message } from '@/types/chat'
 
 const API_BASE_URL = 'http://localhost:8080/api'
 
-// 流式响应数据类型
 export interface StreamResponse {
   type: 'content' | 'error' | 'complete'
   data: string
 }
 
-// 流式聊天服务
+export interface ChatResponse {
+  content: string
+  conversationId: number
+}
+
 export const chatService = {
   /**
-   * 发送流式聊天消息
+   * 流式聊天
    */
   async sendMessageStream(
     request: ChatRequest,
@@ -22,131 +25,181 @@ export const chatService = {
   ): Promise<() => void> {
     let abortController: AbortController | null = null
 
-    console.log('🔍 [DEBUG] 开始发送流式请求:', request)
-
     try {
       abortController = new AbortController()
-
       const response = await fetch(`${API_BASE_URL}/chat/stream`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
         signal: abortController.signal
       })
 
-      console.log('🔍 [DEBUG] 收到响应状态:', response.status, response.statusText)
-
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ [DEBUG] HTTP错误:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+        throw new Error(`HTTP ${response.status}`)
       }
 
       if (!response.body) {
-        console.error('❌ [DEBUG] 响应体为空')
-        throw new Error('Response body is null')
+        throw new Error('Empty response body')
       }
 
-      console.log('🔍 [DEBUG] 开始读取流数据...')
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-
-      // 处理流式数据 - 修复SSE格式解析
-      const processStream = async () => {
-        try {
-          let buffer = ''
-
-          while (true) {
-            const { done, value } = await reader.read()
-
-            if (done) {
-              console.log('🔍 [DEBUG] 流读取完成')
-              break
-            }
-
-            const chunk = decoder.decode(value, { stream: true })
-            buffer += chunk
-
-            console.log('🔍 [DEBUG] 收到原始数据块:', chunk)
-            console.log('🔍 [DEBUG] 当前缓冲区:', buffer)
-
-            // 按行分割并处理SSE格式
-            const lines = buffer.split('\n')
-            buffer = lines.pop() || '' // 保留未完成的行
-
-            for (const line of lines) {
-              const trimmedLine = line.trim()
-              if (!trimmedLine) continue
-
-              console.log('🔍 [DEBUG] 处理行:', trimmedLine)
-
-              // 解析SSE格式: data:{"type":"content","data":"您好"}
-              if (trimmedLine.startsWith('data:')) {
-                const jsonStr = trimmedLine.substring(5).trim() // 去掉 "data:"
-
-                try {
-                  const data: StreamResponse = JSON.parse(jsonStr)
-                  console.log('✅ [DEBUG] 解析成功:', data)
-
-                  switch (data.type) {
-                    case 'content':
-                      console.log('✅ [DEBUG] 收到内容:', data.data)
-                      onContent(data.data)
-                      break
-                    case 'error':
-                      console.error('❌ [DEBUG] 收到错误:', data.data)
-                      onError(data.data)
-                      break
-                    case 'complete':
-                      console.log('✅ [DEBUG] 收到完成信号:', data.data)
-                      onComplete(parseInt(data.data))
-                      return // 完成时退出
-                    default:
-                      console.warn('⚠️ [DEBUG] 未知的数据类型:', data.type)
-                  }
-                } catch (parseError) {
-                  console.error('❌ [DEBUG] 解析JSON失败:', parseError, '原始数据:', jsonStr)
-                }
-              } else if (trimmedLine.startsWith('id:')) {
-                // 忽略SSE的id字段
-                console.log('🔍 [DEBUG] 忽略SSE id:', trimmedLine)
-              } else if (trimmedLine.startsWith('event:')) {
-                // 忽略SSE的event字段
-                console.log('🔍 [DEBUG] 忽略SSE event:', trimmedLine)
-              } else {
-                console.warn('⚠️ [DEBUG] 未知的SSE字段:', trimmedLine)
-              }
-            }
-          }
-        } catch (streamError) {
-          if (streamError.name === 'AbortError') {
-            console.log('🔍 [DEBUG] 流被用户中止')
-          } else {
-            console.error('❌ [DEBUG] 流处理错误:', streamError)
-            onError('流式传输处理失败: ' + streamError.message)
-          }
-        }
-      }
-
-      processStream()
+      this.processSSEStream(response.body, onContent, onError, onComplete)
 
     } catch (error) {
-      console.error('❌ [DEBUG] 请求失败:', error)
       if (error.name === 'AbortError') {
-        onError('请求被用户取消')
+        onError('Request cancelled')
       } else {
-        onError('网络请求失败: ' + error.message)
+        onError(error.message)
       }
     }
 
-    // 返回中止函数
-    return () => {
-      console.log('🔍 [DEBUG] 执行中止函数')
-      if (abortController) {
-        abortController.abort()
+    return () => abortController?.abort()
+  },
+
+  /**
+   * 非流式聊天
+   */
+  async sendMessage(request: ChatRequest): Promise<ChatResponse> {
+    const response = await fetch(`${API_BASE_URL}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`HTTP ${response.status}: ${errorText}`)
+    }
+
+    return response.json()
+  },
+
+  /**
+   * 处理SSE流数据 - 核心解析逻辑
+   */
+  async processSSEStream(
+    readableStream: ReadableStream<Uint8Array>,
+    onContent: (content: string) => void,
+    onError: (error: string) => void,
+    onComplete: (conversationId: number) => void
+  ): Promise<void> {
+    const reader = readableStream.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) {
+          // 处理缓冲区剩余数据
+          if (buffer.trim()) {
+            this.processSSEBuffer(buffer, onContent, onError, onComplete)
+          }
+
+          break
+        }
+
+        // 解码数据并添加到缓冲区
+        buffer += decoder.decode(value, { stream: true })
+
+        // 按SSE事件分割（标准SSE以\n\n分隔）
+        const events = buffer.split('\n\n')
+
+        // 保留最后一个不完整的事件
+        buffer = events.pop() || ''
+
+        // 处理每个完整的事件
+        for (const event of events) {
+          if (event.trim()) {
+            this.processSSEEvent(event.trim(), onContent, onError, onComplete)
+          }
+        }
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+          console.log('[SSE] 流被用户中止')
+
+      } else {
+        console.error('[SSE] 流处理错误:', error)
+        onError(`流式传输错误: ${error.message}`)
+      }
+    }
+  },
+
+  /**
+   * 处理单个SSE事件
+   */
+  processSSEEvent(
+    event: string,
+    onContent: (content: string) => void,
+    onError: (error: string) => void,
+    onComplete: (conversationId: number) => void
+  ): void {
+    const lines = event.split('\n')
+
+    for (const line of lines) {
+      if (line.startsWith('data:')) {
+        const jsonStr = line.substring(5).trim()
+        if (!jsonStr) continue
+
+        try {
+          const data: StreamResponse = JSON.parse(jsonStr)
+
+            console.log('[SSE] ', '[', data.type, '] -', data.data.substring(0, 50), '-')
+
+
+          switch (data.type) {
+            case 'content':
+              onContent(data.data)
+              break
+            case 'error':
+              onError(data.data)
+              break
+            case 'complete':
+              const conversationId = parseInt(data.data)
+              if (!isNaN(conversationId)) {
+                onComplete(conversationId)
+              } else {
+                console.error('[SSE] 无效的会话ID:', data.data)
+                onError('收到无效的会话ID')
+              }
+              break
+            default:
+              console.warn('[SSE] 未知的事件类型:', data.type)
+          }
+        } catch (parseError) {
+          console.error('[SSE] 解析JSON失败:', parseError, '原始数据:', jsonStr)
+        }
+      }
+      // 忽略其他SSE字段（id:, event:, retry: 等）
+    }
+  },
+
+  /**
+   * 处理缓冲区剩余数据
+   */
+  processSSEBuffer(
+    buffer: string,
+    onContent: (content: string) => void,
+    onError: (error: string) => void,
+    onComplete: (conversationId: number) => void
+  ): void {
+    // 尝试按行处理缓冲区剩余数据
+    const lines = buffer.split('\n')
+
+    for (const line of lines) {
+      if (line.startsWith('data:')) {
+        const jsonStr = line.substring(5).trim()
+        if (!jsonStr) continue
+
+        try {
+          const data: StreamResponse = JSON.parse(jsonStr)
+          // 创建一个模拟的SSE事件进行处理
+          const mockEvent = `data:${JSON.stringify(data)}`
+          this.processSSEEvent(mockEvent, onContent, onError, onComplete)
+        } catch (e) {
+          console.error('[SSE] 处理缓冲区数据失败:', e)
+        }
       }
     }
   },
@@ -156,7 +209,6 @@ export const chatService = {
    */
   async getConversations(): Promise<Conversation[]> {
     try {
-      // 需要后端提供这个接口
       const response = await fetch(`${API_BASE_URL}/conversations`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -164,7 +216,6 @@ export const chatService = {
       return await response.json()
     } catch (error) {
       console.error('获取会话列表失败:', error)
-      // 返回空数组而不是抛出错误
       return []
     }
   },
@@ -174,7 +225,6 @@ export const chatService = {
    */
   async getMessages(conversationId: number): Promise<Message[]> {
     try {
-      // 需要后端提供这个接口
       const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -207,8 +257,6 @@ export const chatService = {
       console.error('删除会话失败:', error)
       // 如果后端没有实现删除接口，我们仍然在前端删除
       console.warn('后端删除接口可能未实现，仅在前端删除')
-      // 不抛出错误，让前端状态更新继续执行
     }
   }
-
 }

@@ -40,9 +40,8 @@ defineProps<Props>()
       <MessageBubble
         v-for="message in messages"
         :key="message.id || message.createdAt"
-        :role="message.role"
-        :content="message.content"
-        :animate="true"
+        :message="message"
+        :is-streaming="isLoading && message.role === 'assistant' && message.content === ''"
       />
     </TransitionGroup>
 
@@ -54,14 +53,10 @@ defineProps<Props>()
 <style scoped>
 .message-list {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
+  overflow-y: auto;
+  padding: 20px;
 }
 
-/* 欢迎消息样式 */
 .welcome-message {
   text-align: center;
   padding: 60px 20px;
@@ -69,20 +64,15 @@ defineProps<Props>()
 }
 
 .welcome-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  opacity: 0.8;
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
 .welcome-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--text-primary);
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .welcome-subtitle {
@@ -93,52 +83,53 @@ defineProps<Props>()
 
 .welcome-examples {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
+  max-width: 300px;
+  margin: 0 auto;
 }
 
 .example-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding: 12px 16px;
   background: var(--surface-dark);
-  border: 1px solid var(--border-dark);
   border-radius: 12px;
   cursor: pointer;
-  transition: all var(--transition-normal) ease;
-  font-size: 14px;
+  transition: all var(--transition-fast) ease;
+  border: 1px solid var(--border-dark);
+  color: var(--text-primary);
 }
 
 .example-item:hover {
   background: var(--surface-dark-hover);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
 }
 
 .example-icon {
-  font-size: 16px;
+  font-size: 18px;
 }
 
-/* 消息过渡动画 */
-.message-move,
+.messages {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 消息动画 */
 .message-enter-active,
 .message-leave-active {
-  transition: all 0.5s ease;
+  transition: all var(--transition-normal) ease;
 }
 
 .message-enter-from {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(20px);
 }
 
 .message-leave-to {
   opacity: 0;
-  transform: translateY(-30px);
-}
-
-.message-leave-active {
-  position: absolute;
+  transform: translateY(-20px);
 }
 </style>

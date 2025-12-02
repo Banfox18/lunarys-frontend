@@ -25,12 +25,6 @@ export interface ChatRequest {
   }>
 }
 
-// 移除旧的ChatResponse，因为现在是流式响应
-// export interface ChatResponse {
-//   conversationId: number
-//   answer: string
-// }
-
 // 模型类型
 export type AIModel = 'deepseek-chat' | 'deepseek-reasoner'
 
@@ -40,4 +34,5 @@ export interface AppSettings {
   model: AIModel
   apiKey?: string
   temperature: number
+  enableStreaming?: boolean
 }
