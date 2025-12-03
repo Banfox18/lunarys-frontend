@@ -48,7 +48,7 @@
       </div>
 
       <div class="message-time">
-        {{ new Date(message.createdAt).toLocaleTimeString() }}
+        {{ formatMessageTime(message.createdAt) }}
       </div>
     </div>
   </div>
@@ -104,6 +104,45 @@ const copyButtonText = computed(() => {
     default: return '📋 复制'
   }
 })
+// 时间格式化函数
+const formatMessageTime = (timestamp: number | string | Date): string => {
+  const date = new Date(timestamp)
+  const now = new Date()
+
+  // 判断是否是今天
+  const isToday = date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear()
+
+  // 判断是否是昨天
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear()
+
+  // 格式化时间
+  const timeStr = date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+
+  if (isToday) {
+    return timeStr
+  } else if (isYesterday) {
+    return `昨天 ${timeStr}`
+  } else {
+    // 显示日期和时间
+    const dateStr = date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+    return `${dateStr} ${timeStr}`
+  }
+}
+
 </script>
 
 <style scoped>

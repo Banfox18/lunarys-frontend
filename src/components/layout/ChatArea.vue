@@ -134,7 +134,7 @@ const chatBackgroundStyle = computed(() => {
 
 /* 为图片背景下的输入区域添加遮罩 */
 .chat-area:has(.chat-background[style*="background-image"]) .input-container {
-  background: rgba(30, 30, 30, 0.8);
+  background: rgba(30, 30, 30, 0);
   backdrop-filter: blur(4px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
