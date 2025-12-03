@@ -1,6 +1,10 @@
 <!-- 修改MessageBubble.vue -->
 <template>
-  <div :class="['message-bubble', { 'user-message': isUser, 'ai-message': !isUser }]">
+  <div
+    :class="['message-bubble', { 'user-message': isUser, 'ai-message': !isUser }]"
+    @mouseenter="isHovering = true"
+    @mouseleave="isHovering = false"
+  >
     <div class="message-avatar">
       <div v-if="isUser" class="avatar user-avatar">👤</div>
       <div v-else class="avatar ai-avatar">🤖</div>
@@ -11,18 +15,26 @@
         <div class="message-role">
           {{ isUser ? 'Administrator' : 'Lunarys' }}
         </div>
-        <button
-          v-if="showCopyButton && !isStreaming"
-          class="copy-button"
-          @click="copyToClipboard"
-          :title="copyButtonText"
-          :disabled="copyStatus !== 'idle'"
-        >
-          {{ copyButtonText }}
-        </button>
       </div>
 
       <div class="message-text">
+        <!-- 使用transition包裹 -->
+        <transition name="action-bar">
+          <div
+            v-if="isHovering && !isStreaming"
+            class="hover-action-bar"
+          >
+            <button
+              class="action-button copy-button"
+              @click="copyToClipboard"
+              :title="copyButtonText"
+              :disabled="copyStatus !== 'idle'"
+            >
+              {{ copyIcon }}
+            </button>
+            <!-- 未来可以在这里添加其他按钮 -->
+          </div>
+        </transition>
         <!-- 思考过程 -->
         <ReasoningProcess
           v-if="showReasoning && reasoningContent"
@@ -69,8 +81,18 @@ interface Props {
 const props = defineProps<Props>()
 
 const isUser = computed(() => props.message.role === 'user')
-const showCopyButton = ref(false)
 const copyStatus = ref<'idle' | 'success' | 'error'>('idle')
+
+const isHovering = ref(false)
+// 复制按钮图标
+const copyIcon = computed(() => {
+  switch (copyStatus.value) {
+    case 'success': return '✅'
+    case 'error': return '❌'
+    default: return '📋'
+  }
+})
+
 
 // 是否显示思考过程
 const showReasoning = computed(() =>
@@ -99,9 +121,9 @@ const copyToClipboard = async () => {
 
 const copyButtonText = computed(() => {
   switch (copyStatus.value) {
-    case 'success': return '✅ 已复制'
-    case 'error': return '❌ 复制失败'
-    default: return '📋 复制'
+    case 'success': return '已复制到剪贴板'
+    case 'error': return '复制失败'
+    default: return '复制文本'
   }
 })
 // 时间格式化函数
@@ -211,29 +233,6 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   opacity: 0.8;
 }
 
-.copy-button {
-  background: var(--surface-dark);
-  border: 1px solid var(--border-dark);
-  color: var(--text-primary);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all var(--transition-fast) ease;
-  opacity: 0.8;
-}
-
-.copy-button:hover {
-  background: var(--surface-dark-hover);
-  border-color: var(--primary-color);
-  opacity: 1;
-}
-
-.copy-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .message-text {
   padding: 12px 16px;
   border-radius: 16px;
@@ -284,6 +283,80 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   border-radius: 50%;
   background: var(--text-secondary);
   animation: typing 1.4s infinite ease-in-out;
+}
+/* 悬停操作栏样式 */
+.hover-action-bar {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.message-bubble.user-message .hover-action-bar {
+  right: 0;
+  left: auto;
+}
+
+.message-bubble.ai-message .hover-action-bar {
+  right: 0;
+  left: auto;
+}
+
+/* Vue Transition 动画 */
+.action-bar-enter-active,
+.action-bar-leave-active {
+  transition:
+    opacity var(--transition-normal) ease,
+    transform var(--transition-normal) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.action-bar-enter-from,
+.action-bar-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+
+.action-bar-enter-to,
+.action-bar-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+/* 操作按钮样式 */
+.action-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(46, 63, 92, 0.3); /* 半透明背景 */
+  border: 1px solid rgba(46, 63, 92, 0.3);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast) ease;
+  box-shadow: var(--shadow-md);
+}
+
+.action-button:hover {
+  background: rgba(37, 99, 235, 0.9);
+  border-color: rgba(37, 99, 235, 0.8);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(37, 99, 235, 0.3),
+    0 0 0 1px rgba(37, 99, 235, 0.4);
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 复制按钮特定样式 */
+.copy-button {
+  /* 可以添加特定样式，如果需要的话 */
 }
 
 .typing-dots span:nth-child(1) { animation-delay: -0.32s; }

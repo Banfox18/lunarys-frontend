@@ -66,7 +66,7 @@ const chatBackgroundStyle = computed(() => {
     <!-- 内容层 -->
     <div class="chat-content">
       <!-- 消息列表区域 -->
-      <div class="messages-container" :style="messagesContainerStyle">
+      <div class="messages-container">
         <MessageList :messages="chatStore.messages" :is-loading="chatStore.isLoading" />
         <div ref="messagesEndRef" />
       </div>
