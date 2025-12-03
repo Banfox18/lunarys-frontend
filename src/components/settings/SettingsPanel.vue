@@ -690,6 +690,20 @@ onUnmounted(() => {
                   <div v-else>图片已加载，点击保存即可应用</div>
                 </div>
               </div>
+              <!-- 透明度控制 -->
+              <div class="form-item" style="margin-top: 16px;">
+                <label class="form-label">透明度</label>
+                <div class="opacity-control">
+                  <el-slider
+                    v-model="background.imageOpacity"
+                    :min="0.1"
+                    :max="1"
+                    :step="0.1"
+                    show-stops
+                  />
+                  <span class="opacity-value">{{ (background.imageOpacity || 0.8).toFixed(1) }}</span>
+                </div>
+              </div>
             </div>
           </div>
 

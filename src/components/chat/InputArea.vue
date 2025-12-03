@@ -158,11 +158,17 @@ const handleInput = () => {
 
 <style scoped>
 .input-area {
-  background: var(--surface-dark);
+  background: rgba(46, 63, 92, 0.4);
   border: 1px solid var(--border-dark);
   border-radius: 12px;
   padding: 12px;
   transition: all var(--transition-normal) ease;
+
+  /* 多层阴影效果 */
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .input-area:focus-within {

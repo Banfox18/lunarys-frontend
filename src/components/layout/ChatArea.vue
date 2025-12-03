@@ -120,22 +120,22 @@ const chatBackgroundStyle = computed(() => {
 
 /* 为图片背景添加遮罩效果 */
 .chat-area:has(.chat-background[style*="background-image"]) .messages-container {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(2px);
+  background: transparent;
+  backdrop-filter: blur(0px);
   border-radius: 8px;
   margin: 8px;
 }
 
 .input-container {
   padding: 20px;
-  border-top: 1px solid var(--border-dark);
-  background: var(--surface-dark);
+  border-top: 0 solid var(--border-dark);
+  background: transparent;
 }
 
 /* 为图片背景下的输入区域添加遮罩 */
 .chat-area:has(.chat-background[style*="background-image"]) .input-container {
-  background: rgba(30, 30, 30, 0);
-  backdrop-filter: blur(4px);
+  background: transparent;
+  backdrop-filter: blur(0px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
