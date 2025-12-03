@@ -11,8 +11,9 @@ export const useChatStore = defineStore('chat', () => {
   const currentConversation = ref<Conversation | null>(null)
   const messages = ref<Message[]>([])
   const isLoading = ref(false)
-  const currentModel = ref('deepseek-chat')
   const abortController = ref<(() => void) | null>(null)
+
+  const settingsStore = useSettingsStore()
 
   // 动作
   const loadConversations = async () => {
@@ -39,7 +40,7 @@ export const useChatStore = defineStore('chat', () => {
     const tempConversation: Conversation = {
       id: -1, // 临时ID，后端会生成正式ID
       title: '新对话',
-      model: currentModel.value,
+      model: settingsStore.model,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       preview: '开始新的对话'
@@ -133,7 +134,7 @@ export const useChatStore = defineStore('chat', () => {
     const request: ChatRequest = {
       message: content,
       conversationId: currentConversation.value!.id > 0 ? currentConversation.value!.id : undefined,
-      model: currentModel.value,
+      model: settingsStore.model,
       messages: messages.value.slice(0, -1).map(msg => ({
         role: msg.role,
         content: msg.content
@@ -141,9 +142,11 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     try {
+      let reasoningContent = ''
+
       abortController.value = await chatService.sendMessageStream(
         request,
-        // 内容回调 - 实时更新消息内容
+        // 内容回调 - 最终答案
         (contentChunk) => {
           const lastIndex = messages.value.length - 1
           messages.value[lastIndex].content += contentChunk
@@ -157,12 +160,25 @@ export const useChatStore = defineStore('chat', () => {
         },
         // 完成回调
         (conversationId) => {
-          // 更新会话ID
           if (currentConversation.value && currentConversation.value.id === -1) {
             currentConversation.value.id = conversationId
           }
           isLoading.value = false
           abortController.value = null
+        },
+        // 新增：思考过程回调
+        (reasoningChunk) => {
+          reasoningContent += reasoningChunk
+          // 这里可以触发UI更新
+          // 例如：更新当前消息的metadata或创建专门的reasoning消息
+          console.log('思考过程:', reasoningChunk)
+
+          // 可选：在消息中存储思考过程
+          const lastIndex = messages.value.length - 1
+          if (!messages.value[lastIndex].metadata) {
+            messages.value[lastIndex].metadata = {}
+          }
+          messages.value[lastIndex].metadata!.reasoningContent = reasoningContent
         }
       )
     } catch (error) {
@@ -173,12 +189,13 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+
 // 添加非流式发送函数
   const sendNonStreamingMessage = async (content: string, aiMessage: Message) => {
     const request: ChatRequest = {
       message: content,
       conversationId: currentConversation.value!.id > 0 ? currentConversation.value!.id : undefined,
-      model: currentModel.value,
+      model: settingsStore.model,
       messages: messages.value.slice(0, -1).map(msg => ({
         role: msg.role,
         content: msg.content
@@ -203,17 +220,6 @@ export const useChatStore = defineStore('chat', () => {
       messages.value[lastIndex].content = `请求失败: ${error.message}`
     } finally {
       isLoading.value = false
-    }
-  }
-
-
-  const updateConversationTitle = (firstMessage: string) => {
-    if (currentConversation.value && currentConversation.value.title === '新对话') {
-      const title = firstMessage.length > 20
-        ? firstMessage.substring(0, 20) + '...'
-        : firstMessage
-      currentConversation.value.title = title
-      currentConversation.value.updatedAt = new Date().toISOString()
     }
   }
 
@@ -249,7 +255,6 @@ export const useChatStore = defineStore('chat', () => {
     currentConversation,
     messages,
     isLoading,
-    currentModel,
 
     // 动作
     loadConversations,

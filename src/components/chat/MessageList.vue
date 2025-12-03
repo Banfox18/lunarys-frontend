@@ -57,6 +57,24 @@ defineProps<Props>()
   padding: 20px;
 }
 
+.message-list::-webkit-scrollbar {
+  width: 9px;
+}
+
+.message-list::-webkit-scrollbar-track {
+  background: var(--surface-dark-hover);
+  border-radius: 5px;
+}
+
+.message-list::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 5px;
+}
+
+.message-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
 .welcome-message {
   text-align: center;
   padding: 60px 20px;

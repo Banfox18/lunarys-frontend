@@ -13,17 +13,18 @@
 
   /* 深色主题色彩 */
   --bg-dark: #0f172a;
-  --surface-dark: #1e293b;
+  --surface-dark: #2e3f5c;
+  --surface-darker: #1f2b3e;
   --surface-dark-hover: #334155;
-  --surface-dark-active: #994455;
-  --border-dark: #374151;
+  --surface-dark-active: #666666;
+  --border-dark: #4c5367;
 
   /* 文字色彩 */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --text-white: #ffffff;
-  --text-tertiary: #119999;
+  --text-tertiary: #999999;
 
   /* 状态色彩 */
   --success-color: #10b981;
@@ -39,6 +40,7 @@
   --transition-fast: 0.2s;
   --transition-normal: 0.3s;
   --transition-slow: 0.5s;
+  --transition-extreme-slow: 0.9s;
 
   /* 阴影 */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);

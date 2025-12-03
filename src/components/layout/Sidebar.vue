@@ -1,8 +1,10 @@
 <!-- src/components/layout/Sidebar.vue -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import ConversationList from '@/components/conversation/ConversationList.vue'
+import SettingsPanel from '@/components/settings/SettingsPanel.vue'  // 新增
+import { ArrowLeft, ArrowRight, Plus, Setting } from '@element-plus/icons-vue'  // 确保导入Setting图标
 
 interface Props {
   collapsed?: boolean
@@ -23,47 +25,74 @@ const handleNewConversation = async () => {
 const handleToggle = () => {
   emit('toggle')
 }
+const showSettings = ref(false)  // 新增
+
+const openSettings = () => {
+  showSettings.value = true
+}
+
+const closeSettings = () => {
+  showSettings.value = false
+}
+
 </script>
 
 <template>
-  <div class="sidebar" :class="{ collapsed }">
-    <!-- 顶部Logo区域 -->
-    <div class="sidebar-header">
-      <div class="logo" v-if="!collapsed">
-        <div class="logo-icon">🤖</div>
-        <span class="logo-text">Lunarys</span>
-      </div>
-      <div class="logo-collapsed" v-else>
-        <div class="logo-icon">🤖</div>
-      </div>
-      <el-button type="text" class="toggle-btn" @click="handleToggle">
-        <el-icon v-if="!collapsed"><ArrowLeft /></el-icon>
-        <el-icon v-else><ArrowRight /></el-icon>
-      </el-button>
-    </div>
-
-    <!-- 新建会话按钮 -->
-    <div class="new-conversation-section" v-if="!collapsed">
-      <el-button type="primary" class="new-conversation-btn" @click="handleNewConversation">
-        <el-icon><Plus /></el-icon>
-        <span>新建对话</span>
-      </el-button>
-    </div>
-
-    <!-- 会话列表 -->
-    <div class="conversation-list-section">
-      <ConversationList :collapsed="collapsed" />
-    </div>
-
-    <!-- 底部设置区域 -->
-    <div class="sidebar-footer" v-if="!collapsed">
-      <div class="settings">
-        <el-button type="text" class="settings-btn">
-          <el-icon><Setting /></el-icon>
-          <span>设置</span>
+  <div>
+    <div class="sidebar" :class="{ collapsed }">
+      <!-- 顶部Logo区域 -->
+      <div class="sidebar-header">
+        <div class="logo" v-if="!collapsed">
+          <div class="logo-icon">🤖</div>
+          <span class="logo-text">Lunarys</span>
+        </div>
+        <div class="logo-collapsed" v-else>
+          <div class="logo-icon">🤖</div>
+        </div>
+        <el-button type="text" class="toggle-btn" @click="handleToggle">
+          <el-icon v-if="!collapsed"><ArrowLeft /></el-icon>
+          <el-icon v-else><ArrowRight /></el-icon>
         </el-button>
       </div>
+
+      <!-- 新建会话按钮 -->
+      <div class="new-conversation-section" v-if="!collapsed">
+        <el-button type="primary" class="new-conversation-btn" @click="handleNewConversation">
+          <el-icon><Plus /></el-icon>
+          <span>新建对话</span>
+        </el-button>
+      </div>
+
+      <!-- 会话列表 -->
+      <div class="conversation-list-section">
+        <ConversationList :collapsed="collapsed" />
+      </div>
+
+      <!-- 底部设置区域 -->
+      <div class="sidebar-footer" v-if="!collapsed">
+        <div class="settings">
+          <el-button type="text" class="settings-btn" @click="openSettings">
+            <el-icon><Setting /></el-icon>
+            <span>设置</span>
+          </el-button>
+        </div>
+      </div>
     </div>
+    <!-- 弹窗使用Teleport移到body -->
+    <Teleport to="body">
+      <el-dialog
+        v-model="showSettings"
+        width="500px"
+        :show-close="false"
+        :close-on-click-modal="false"
+        :close-on-press-escape="true"
+        destroy-on-close
+        style="background: transparent; box-shadow: none;"
+        :lock-scroll="true"
+      >
+        <SettingsPanel @close="closeSettings" />
+      </el-dialog>
+    </Teleport>
   </div>
 </template>
 
@@ -75,6 +104,7 @@ const handleToggle = () => {
   border-right: 1px solid var(--border-dark);
   transition: all var(--transition-normal) ease;
   min-width: 280px;
+  height: 100%;
 }
 
 .sidebar.collapsed {
@@ -160,6 +190,7 @@ const handleToggle = () => {
 .sidebar-footer {
   padding: 16px;
   border-top: 1px solid var(--border-dark);
+  margin-top: auto;
 }
 
 .settings-btn {

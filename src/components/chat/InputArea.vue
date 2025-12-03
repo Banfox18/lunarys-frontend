@@ -154,17 +154,6 @@ const handleInput = () => {
       </div>
     </div>
   </div>
-  <div class="chat-header">
-    <div class="streaming-toggle">
-      <button
-        @click="toggleStreaming"
-        :class="{ active: enableStreaming }"
-      >
-        {{ enableStreaming ? '🔴 流式' : '⚪ 完整' }}
-      </button>
-      <span class="hint">{{ enableStreaming ? '实时响应' : '完整响应' }}</span>
-    </div>
-  </div>
 </template>
 
 <style scoped>
@@ -230,8 +219,25 @@ const handleInput = () => {
 /* 输入容器 */
 .input-container {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
+}
+.message-input::-webkit-scrollbar {
+  width: 9px;
+}
+
+.message-input::-webkit-scrollbar-track {
+  background: var(--surface-dark-hover);
+  border-radius: 5px;
+}
+
+.message-input::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 5px;
+}
+
+.message-input::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 
 .message-input {

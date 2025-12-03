@@ -4,7 +4,7 @@ import type { ChatRequest, Conversation, Message } from '@/types/chat'
 const API_BASE_URL = 'http://localhost:8080/api'
 
 export interface StreamResponse {
-  type: 'content' | 'error' | 'complete'
+  type: 'reasoning' | 'content' | 'error' | 'complete'
   data: string
 }
 
@@ -21,7 +21,8 @@ export const chatService = {
     request: ChatRequest,
     onContent: (content: string) => void,
     onError: (error: string) => void,
-    onComplete: (conversationId: number) => void
+    onComplete: (conversationId: number) => void,
+    onReasoning?: (reasoning: string) => void  // 新增：思考过程回调
   ): Promise<() => void> {
     let abortController: AbortController | null = null
 
@@ -35,14 +36,19 @@ export const chatService = {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
+        const error = new Error(`HTTP ${response.status}`)
+        onError(error.message)
+        return
       }
 
       if (!response.body) {
-        throw new Error('Empty response body')
+        const error = new Error('Empty response body')
+        onError(error.message)
+        return
       }
 
-      this.processSSEStream(response.body, onContent, onError, onComplete)
+      // 修改processSSEStream调用，传入onReasoning回调
+      this.processSSEStream(response.body, onContent, onError, onComplete, onReasoning)
 
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -133,7 +139,8 @@ export const chatService = {
     event: string,
     onContent: (content: string) => void,
     onError: (error: string) => void,
-    onComplete: (conversationId: number) => void
+    onComplete: (conversationId: number) => void,
+    onReasoning?: (reasoning: string) => void
   ): void {
     const lines = event.split('\n')
 
@@ -145,10 +152,14 @@ export const chatService = {
         try {
           const data: StreamResponse = JSON.parse(jsonStr)
 
-            console.log('[SSE] ', '[', data.type, '] -', data.data.substring(0, 50), '-')
-
+          console.log('[SSE] ', '[', data.type, '] -', data.data.substring(0, 50), '-')
 
           switch (data.type) {
+            case 'reasoning':  // 统一使用reasoning
+              if (onReasoning) {
+                onReasoning(data.data)
+              }
+              break
             case 'content':
               onContent(data.data)
               break
@@ -171,7 +182,6 @@ export const chatService = {
           console.error('[SSE] 解析JSON失败:', parseError, '原始数据:', jsonStr)
         }
       }
-      // 忽略其他SSE字段（id:, event:, retry: 等）
     }
   },
 
@@ -211,7 +221,8 @@ export const chatService = {
     try {
       const response = await fetch(`${API_BASE_URL}/conversations`)
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        console.error(`获取会话列表失败: HTTP ${response.status}`)
+        return []
       }
       return await response.json()
     } catch (error) {
@@ -227,7 +238,8 @@ export const chatService = {
     try {
       const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`)
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        console.error(`获取消息历史失败: HTTP ${response.status}`)
+        return []
       }
       return await response.json()
     } catch (error) {
@@ -251,7 +263,8 @@ export const chatService = {
           console.log('会话不存在，视为删除成功')
           return
         }
-        throw new Error(`HTTP error! status: ${response.status}`)
+        console.error(`删除会话失败: HTTP ${response.status}`)
+        // 继续执行，因为已经在catch块中
       }
     } catch (error) {
       console.error('删除会话失败:', error)

@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useChatStore } from '@/stores/chat'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import ConversationItem from './ConversationItem.vue'
 
 interface Props {
@@ -15,43 +15,29 @@ const chatStore = useChatStore()
 
 // 确保每个conversation都有preview
 const conversationsWithPreview = computed(() => {
-  return chatStore.conversations.map((conv) => ({
-    ...conv,
-    preview: conv.preview || '暂无消息',
-  }))
+  return chatStore.conversations
+    .filter(conv => conv.id !== -1)  // 过滤掉临时对话（ID为-1）
+    .map((conv) => ({
+      ...conv,
+      preview: conv.preview || '暂无消息',
+    }))
 })
 
 const handleConversationClick = async (conversationId: number) => {
   await chatStore.switchConversation(conversationId)
 }
 
+// 修改handleConversationDelete，移除ElMessageBox.confirm
 const handleConversationDelete = async (conversationId: number) => {
   try {
-    // 确认删除对话框
-    await ElMessageBox.confirm(
-      '确定要删除这个会话吗？删除后无法恢复。',
-      '确认删除',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-
-    // 执行删除
     await chatStore.deleteConversation(conversationId)
-
     ElMessage.success('会话删除成功')
   } catch (error) {
-    if (error === 'cancel') {
-      // 用户取消删除，不做任何操作
-      console.log('用户取消删除')
-    } else {
-      console.error('删除会话失败:', error)
-      ElMessage.error('删除会话失败，请重试')
-    }
+    console.error('删除会话失败:', error)
+    ElMessage.error('删除会话失败，请重试')
   }
 }
+
 </script>
 
 <template>
@@ -101,7 +87,29 @@ const handleConversationDelete = async (conversationId: number) => {
 .conversations {
   flex: 1;
   overflow-y: auto;
-  padding: 0 8px;
+  padding: 0 16px 0 8px;
+  border-right: 8px solid transparent; /* 右边增加透明边框 */
+}
+
+.conversations::-webkit-scrollbar {
+  width: 9px;
+  margin-right: 8px;
+}
+
+.conversations::-webkit-scrollbar-track {
+  background: var(--surface-dark-hover);
+  border-radius: 5px;
+  margin: 4px 0;
+}
+
+.conversations::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 5px;
+  margin: 4px 2px;
+}
+
+.conversations::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 
 .empty-state {
