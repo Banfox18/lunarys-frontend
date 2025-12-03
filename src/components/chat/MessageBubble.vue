@@ -314,7 +314,7 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
 .action-bar-enter-from,
 .action-bar-leave-to {
   opacity: 0;
-  transform: translateY(20px) scale(0.95);
+  transform: translateY(12px) scale(0.95);
 }
 
 .action-bar-enter-to,
@@ -322,37 +322,83 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
-/* 操作按钮样式 */
+/* 操作按钮样式 - 增强渐变版 */
 .action-button {
-  width: 32px;
+  width: 36px;
   height: 32px;
-  border-radius: 8px;
-  background: rgba(46, 63, 92, 0.3); /* 半透明背景 */
-  border: 1px solid rgba(46, 63, 92, 0.3);
+  border-radius: 0;
+  background:
+    /* 中间实色层 */
+    linear-gradient(
+      to top,
+      rgba(37, 99, 235, 0) 0%,
+      rgba(37, 99, 235, 0.3) 50%,
+      rgba(37, 99, 235, 0) 100%
+    ),
+      /* 四周透明渐变层 */
+    radial-gradient(
+      circle at center,
+      rgba(37, 99, 235, 0.3) 0%,
+      rgba(37, 99, 235, 0) 50%,
+      transparent 100%
+    );
+  border: none;
+  border-left: 2px solid rgba(37, 99, 235, 0.2);
+  border-right: 2px solid rgba(37, 99, 235, 0.2);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast) ease;
-  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
 }
 
 .action-button:hover {
-  background: rgba(37, 99, 235, 0.9);
-  border-color: rgba(37, 99, 235, 0.8);
+  background:
+    linear-gradient(
+      to top,
+      rgba(59, 130, 246, 0) 0%,
+      rgba(59, 130, 246, 0.3) 50%,
+      rgba(59, 130, 246, 0) 100%
+    ),
+    radial-gradient(
+      circle at center,
+      rgba(59, 130, 246, 0.4) 0%,
+      rgba(59, 130, 246, 0.04) 50%,
+      transparent 100%
+    );
+  border: none;
+  border-left: 2px solid rgba(59, 130, 246, 0.2);
+  border-right: 2px solid rgba(59, 130, 246, 0.2);
   transform: translateY(-2px);
-  box-shadow:
-    0 4px 12px rgba(37, 99, 235, 0.3),
-    0 0 0 1px rgba(37, 99, 235, 0.4);
 }
 
-.action-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+/* 流光动画效果 */
+.action-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%) rotate(45deg);
+  transition: transform 0.8s ease;
 }
+
+.action-button:hover::after {
+  transform: translateX(100%) rotate(45deg);
+}
+
+
 
 /* 复制按钮特定样式 */
 .copy-button {
