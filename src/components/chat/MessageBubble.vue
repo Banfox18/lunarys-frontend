@@ -2,8 +2,6 @@
 <template>
   <div
     :class="['message-bubble', { 'user-message': isUser, 'ai-message': !isUser }]"
-    @mouseenter="isHovering = true"
-    @mouseleave="isHovering = false"
   >
     <div v-if="displayAvatar" class="message-avatar">
       <div
@@ -46,20 +44,6 @@
       </div>
 
       <div class="message-text">
-        <!-- 使用transition包裹 -->
-        <transition name="action-bar">
-          <div v-if="isHovering && !isStreaming" class="hover-action-bar">
-            <button
-              class="action-button copy-button"
-              @click="copyToClipboard"
-              :title="copyButtonText"
-              :disabled="copyStatus !== 'idle'"
-            >
-              {{ copyIcon }}
-            </button>
-            <!-- 未来可以在这里添加其他按钮 -->
-          </div>
-        </transition>
         <!-- 思考过程 -->
         <ReasoningProcess
           v-if="showReasoning && reasoningContent"
@@ -84,8 +68,44 @@
         </div>
       </div>
 
-      <div class="message-time">
-        {{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}
+      <!-- 消息 Footer 小组件栏 -->
+      <div class="message-footer">
+        <!-- 用户消息的 Footer：时间在左，操作按钮在右 -->
+        <template v-if="isUser">
+          <div class="footer-time">
+            {{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}
+          </div>
+          <div class="footer-actions">
+            <button
+              :class="['footer-button', 'copy-button', `copy-status-${copyStatus}`]"
+              @click="copyToClipboard"
+              :title="copyButtonText"
+              :disabled="copyStatus !== 'idle' || isStreaming"
+            >
+              <el-icon>
+                <component :is="copyIconComponent" />
+              </el-icon>
+            </button>
+          </div>
+        </template>
+        <!-- AI 消息的 Footer：操作按钮在左，时间在右 -->
+        <template v-else>
+          <div class="footer-actions">
+            <button
+              :class="['footer-button', 'copy-button', `copy-status-${copyStatus}`]"
+              @click="copyToClipboard"
+              :title="copyButtonText"
+              :disabled="copyStatus !== 'idle' || isStreaming"
+            >
+              <el-icon>
+                <component :is="copyIconComponent" />
+              </el-icon>
+            </button>
+          </div>
+          <div class="footer-time">
+            {{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -96,6 +116,7 @@ import { ref, computed, withDefaults } from 'vue'
 import type { Message } from '@/types/chat'
 import MarkdownRenderer from './MarkdownRenderer.vue'
 import ReasoningProcess from './ReasoningProcess.vue'
+import { DocumentCopy, Check, CircleCloseFilled } from '@element-plus/icons-vue'
 
 interface Props {
   message: Message
@@ -134,16 +155,15 @@ const displayAvatar = computed(() => {
   }
 })
 
-const isHovering = ref(false)
-// 复制按钮图标
-const copyIcon = computed(() => {
+// 复制按钮图标组件
+const copyIconComponent = computed(() => {
   switch (copyStatus.value) {
     case 'success':
-      return '✅'
+      return Check
     case 'error':
-      return '❌'
+      return CircleCloseFilled
     default:
-      return '📋'
+      return DocumentCopy
   }
 })
 
@@ -335,12 +355,6 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   line-height: 1.5;
 }
 
-.message-time {
-  font-size: 12px;
-  color: var(--text-secondary);
-  opacity: 0.7;
-}
-
 .streaming-indicator {
   display: inline-block;
   margin-left: 8px;
@@ -359,118 +373,142 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   background: var(--text-secondary);
   animation: typing 1.4s infinite ease-in-out;
 }
-/* 悬停操作栏样式 */
-.hover-action-bar {
-  position: absolute;
-  top: -44px;
-  right: 0;
+
+/* 消息 Footer 小组件栏 */
+.message-footer {
   display: flex;
+  align-items: center;
   gap: 8px;
-  z-index: 10;
+  margin-top: 4px;
+  padding: 4px 0;
+  min-height: 24px;
 }
 
-.message-bubble.user-message .hover-action-bar {
-  right: 0;
-  left: auto;
+/* 用户消息 Footer：时间在左，操作按钮在右 */
+.message-bubble.user-message .message-footer {
+  justify-content: flex-end;
+  flex-direction: row;
 }
 
-.message-bubble.ai-message .hover-action-bar {
-  right: 0;
-  left: auto;
+.message-bubble.user-message .footer-time {
+  order: 1;
 }
 
-/* Vue Transition 动画 */
-.action-bar-enter-active,
-.action-bar-leave-active {
-  transition:
-    opacity var(--transition-normal) ease,
-    transform var(--transition-normal) cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.action-bar-enter-from,
-.action-bar-leave-to {
-  opacity: 0;
-  transform: translateY(12px) scale(0.95);
+.message-bubble.user-message .footer-actions {
+  order: 2;
 }
 
-.action-bar-enter-to,
-.action-bar-leave-from {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+/* AI 消息 Footer：操作按钮在左，时间在右 */
+.message-bubble.ai-message .message-footer {
+  justify-content: flex-start;
+  flex-direction: row;
 }
-/* 操作按钮样式 - 增强渐变版 */
-.action-button {
-  width: 36px;
-  height: 32px;
-  border-radius: 0;
-  background:
-    /* 中间实色层 */
-    linear-gradient(
-      to top,
-      rgba(37, 99, 235, 0) 0%,
-      rgba(93, 136, 231, 0.2) 50%,
-      rgba(37, 99, 235, 0) 100%
-    ),
-    /* 四周透明渐变层 */
-      radial-gradient(
-        circle at center,
-        rgba(93, 136, 231, 0.2) 0%,
-        rgba(37, 99, 235, 0) 50%,
-        transparent 100%
-      );
-  border: none;
-  border-left: 2px solid rgba(131, 162, 231, 0.1);
-  border-right: 2px solid rgba(131, 162, 231, 0.1);
-  color: var(--text-primary);
+
+.footer-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Footer 按钮样式 */
+.footer-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
   font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast) ease;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  opacity: 0.7;
+  padding: 0;
 }
 
-.action-button:hover {
-  background:
-    linear-gradient(
-      to top,
-      rgba(59, 130, 246, 0) 0%,
-      rgba(59, 130, 246, 0.3) 50%,
-      rgba(59, 130, 246, 0) 100%
-    ),
-    radial-gradient(
-      circle at center,
-      rgba(59, 130, 246, 0.4) 0%,
-      rgba(59, 130, 246, 0.04) 50%,
-      transparent 100%
-    );
-  border: none;
-  border-left: 2px solid rgba(59, 130, 246, 0.2);
-  border-right: 2px solid rgba(59, 130, 246, 0.2);
-  transform: translateY(-2px);
+.footer-button .el-icon {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 流光动画效果 */
-.action-button::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 70%
-  );
-  transform: translateX(-100%) rotate(45deg);
-  transition: transform 0.8s ease;
+.footer-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+  transform: translateY(-1px);
 }
 
-.action-button:hover::after {
-  transform: translateX(100%) rotate(45deg);
+.footer-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* 用户消息的按钮样式 */
+.message-bubble.user-message .footer-button {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.message-bubble.user-message .footer-button:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.25);
+  border-color: rgba(37, 99, 235, 0.35);
+  color: rgba(255, 255, 255, 1);
+}
+
+.message-bubble.user-message .footer-button .el-icon {
+  color: inherit;
+}
+
+/* AI 消息的按钮样式 */
+.message-bubble.ai-message .footer-button {
+  background: rgba(76, 83, 103, 0.1);
+  border-color: rgba(76, 83, 103, 0.15);
+  color: var(--text-secondary);
+}
+
+.message-bubble.ai-message .footer-button:hover:not(:disabled) {
+  background: rgba(76, 83, 103, 0.2);
+  border-color: rgba(76, 83, 103, 0.25);
+  color: var(--text-primary);
+}
+
+.message-bubble.ai-message .footer-button .el-icon {
+  color: inherit;
+}
+
+/* 成功状态图标颜色 */
+.footer-button.copy-button.copy-status-success {
+  color: #67c23a;
+}
+
+.footer-button.copy-button.copy-status-success .el-icon {
+  color: #67c23a;
+}
+
+/* 错误状态图标颜色 */
+.footer-button.copy-button.copy-status-error {
+  color: #f56c6c;
+}
+
+.footer-button.copy-button.copy-status-error .el-icon {
+  color: #f56c6c;
 }
 
 .typing-dots span:nth-child(1) {

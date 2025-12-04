@@ -135,7 +135,7 @@ const closeSettings = () => {
 }
 
 .logo-text {
-  background: linear-gradient(135deg, #627aad, #a462ad);
+  background: linear-gradient(135deg, #516ba3, #9d6ca4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
