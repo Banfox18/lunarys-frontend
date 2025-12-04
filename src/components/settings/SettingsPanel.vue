@@ -5,7 +5,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useChatStore } from '@/stores/chat'
 import type { AIModel, BackgroundType, ChatBackground } from '@/types/chat'
 import { Check, Close, UploadFilled } from '@element-plus/icons-vue'
-import type { UploadFile} from 'element-plus'
+import type { UploadFile } from 'element-plus'
 import { ElLoading, ElMessage } from 'element-plus'
 
 const emit = defineEmits<{
@@ -345,7 +345,12 @@ const compressImage = (
         const dataUrl = canvas.toDataURL(mimeType, quality)
 
         // 转换回File对象
-        const byteString = atob(dataUrl.split(',')[1])
+        const dataUrlParts = dataUrl.split(',')
+        if (!dataUrlParts[1]) {
+          reject(new Error('无法解析图片数据'))
+          return
+        }
+        const byteString = atob(dataUrlParts[1])
         const ab = new ArrayBuffer(byteString.length)
         const ia = new Uint8Array(ab)
 
@@ -564,7 +569,14 @@ onUnmounted(() => {
           <!-- 纯色背景选择器 -->
           <div v-if="background.type === 'solid'" class="form-item">
             <label class="form-label">选择颜色</label>
-            <el-color-picker v-model="background.color" :predefine="predefinedColors" show-alpha />
+            <div class="color-picker-wrapper">
+              <el-color-picker
+                v-model="background.color"
+                :predefine="predefinedColors"
+                show-alpha
+              />
+              <div class="color-preview" :style="{ background: background.color }"></div>
+            </div>
           </div>
 
           <!-- 渐变背景设置 -->
@@ -574,7 +586,7 @@ onUnmounted(() => {
               <div class="gradient-color-item">
                 <label class="color-label">起始颜色</label>
                 <el-color-picker
-                  v-model="background.gradientColors[0]"
+                  v-model="background.gradientColors![0]"
                   :predefine="predefinedColors"
                   show-alpha
                 />
@@ -582,7 +594,7 @@ onUnmounted(() => {
               <div class="gradient-color-item">
                 <label class="color-label">结束颜色</label>
                 <el-color-picker
-                  v-model="background.gradientColors[1]"
+                  v-model="background.gradientColors![1]"
                   :predefine="predefinedColors"
                   show-alpha
                 />
@@ -691,7 +703,7 @@ onUnmounted(() => {
                 </div>
               </div>
               <!-- 透明度控制 -->
-              <div class="form-item" style="margin-top: 16px;">
+              <div class="form-item" style="margin-top: 16px">
                 <label class="form-label">透明度</label>
                 <div class="opacity-control">
                   <el-slider
@@ -701,7 +713,9 @@ onUnmounted(() => {
                     :step="0.1"
                     show-stops
                   />
-                  <span class="opacity-value">{{ (background.imageOpacity || 0.8).toFixed(1) }}</span>
+                  <span class="opacity-value">{{
+                    (background.imageOpacity || 0.8).toFixed(1)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -741,57 +755,142 @@ onUnmounted(() => {
 
 <style scoped>
 .settings-panel {
-  background: var(--surface-dark);
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 500px;
+  background: linear-gradient(135deg, var(--surface-dark) 0%, var(--surface-darker) 100%);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 560px;
   margin: 0;
-  max-height: 70vh;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-dark);
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.settings-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), transparent);
+  border-radius: 2px;
 }
 
 .settings-title {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.close-btn {
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-dark-hover);
+  transform: rotate(90deg);
 }
 
 .settings-content {
   flex: 1;
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 12px;
+  margin-right: -12px;
 }
 
 .settings-section {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  animation: fadeInUp 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.settings-section:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.settings-section:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.settings-section:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.settings-section:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.3px;
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 18px;
+  background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+  border-radius: 2px;
 }
 
 .section-content {
-  background: var(--surface-darker);
-  border-radius: 8px;
-  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.section-content:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .form-item {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-item:last-child {
@@ -801,16 +900,215 @@ onUnmounted(() => {
 .form-label {
   display: block;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  letter-spacing: -0.2px;
 }
 
 .form-hint {
   font-size: 12px;
   color: var(--text-secondary);
-  margin-top: 4px;
+  margin-top: 8px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+/* 模型选项样式 */
+.model-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.model-option {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.model-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary-color);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.model-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.model-option:hover::before {
+  transform: scaleY(1);
+}
+
+.model-option.selected {
+  border-color: var(--primary-color);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%);
+  box-shadow:
+    0 4px 16px rgba(37, 99, 235, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.model-option.selected::before {
+  transform: scaleY(1);
+}
+
+.model-icon {
+  font-size: 32px;
+  margin-right: 16px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.model-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.model-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.model-description {
+  font-size: 12px;
+  color: var(--text-secondary);
   line-height: 1.4;
+  opacity: 0.8;
+}
+
+.model-check {
+  color: var(--primary-color);
+  font-size: 20px;
+  margin-left: 12px;
+  flex-shrink: 0;
+  animation: scaleIn 0.2s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* 温度控制 */
+.temperature-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.temperature-control :deep(.el-slider) {
+  flex: 1;
+}
+
+.temperature-control :deep(.el-slider__runway) {
+  background: rgba(255, 255, 255, 0.1);
+  height: 6px;
+}
+
+.temperature-control :deep(.el-slider__bar) {
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  height: 6px;
+}
+
+.temperature-control :deep(.el-slider__button) {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--primary-color);
+  background: var(--surface-dark);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+.temperature-control :deep(.el-slider__button:hover) {
+  transform: scale(1.2);
+}
+
+.temperature-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-color);
+  min-width: 50px;
+  text-align: center;
+  padding: 6px 12px;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+/* 切换项样式 */
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.toggle-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.toggle-info {
+  flex: 1;
+  margin-right: 16px;
+}
+
+.toggle-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.toggle-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.toggle-item :deep(.el-switch) {
+  --el-switch-on-color: var(--primary-color);
+}
+
+.toggle-item :deep(.el-switch__core) {
+  width: 48px;
+  height: 24px;
 }
 
 /* 背景类型选项 */
@@ -824,33 +1122,60 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px;
-  background: var(--surface-dark);
-  border-radius: 8px;
+  padding: 16px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.background-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
 }
 
 .background-option:hover {
-  background: var(--surface-dark-hover);
+  background: rgba(255, 255, 255, 0.05);
   transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.background-option:hover::before {
+  transform: scaleX(1);
 }
 
 .background-option.selected {
   border-color: var(--primary-color);
-  background: var(--surface-dark-hover);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.background-option.selected::before {
+  transform: scaleX(1);
 }
 
 .bg-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
+  font-size: 28px;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .bg-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
 /* 渐变颜色设置 */
@@ -858,18 +1183,31 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .gradient-color-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.gradient-color-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .color-label {
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* 图片预设 */
@@ -877,7 +1215,7 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .image-preset {
@@ -885,33 +1223,67 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 10px;
   overflow: hidden;
   border: 2px solid transparent;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+}
+
+.image-preset::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .image-preset:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .image-preset.selected {
   border-color: var(--primary-color);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+}
+
+.image-preset.selected::after {
+  opacity: 1;
 }
 
 .preset-image {
   width: 100%;
-  height: 60px;
+  height: 70px;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.image-preset:hover .preset-image {
+  transform: scale(1.1);
 }
 
 .preset-name {
   font-size: 11px;
-  color: var(--text-secondary);
-  padding: 4px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 8px 4px;
   text-align: center;
-  background: var(--surface-dark);
+  background: rgba(255, 255, 255, 0.05);
   width: 100%;
+  letter-spacing: -0.2px;
 }
 
 /* 透明度控制 */
@@ -919,40 +1291,98 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
+  padding: 8px 0;
+}
+
+.opacity-control :deep(.el-slider) {
+  flex: 1;
+}
+
+.opacity-control :deep(.el-slider__runway) {
+  background: rgba(255, 255, 255, 0.1);
+  height: 6px;
+}
+
+.opacity-control :deep(.el-slider__bar) {
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  height: 6px;
+}
+
+.opacity-control :deep(.el-slider__button) {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--primary-color);
+  background: var(--surface-dark);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
 }
 
 .opacity-value {
   font-size: 14px;
-  color: var(--text-primary);
-  min-width: 40px;
+  font-weight: 600;
+  color: var(--primary-color);
+  min-width: 45px;
   text-align: center;
+  padding: 6px 10px;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 /* 应用范围选项 */
 .apply-options {
-  margin-top: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.apply-options :deep(.el-radio-group) {
+  display: flex;
+  gap: 24px;
+}
+
+.apply-options :deep(.el-radio) {
+  margin-right: 0;
+}
+
+.apply-options :deep(.el-radio__input.is-checked .el-radio__inner) {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 /* 预览区域 */
 .background-preview {
-  height: 100px;
-  border-radius: 8px;
+  height: 120px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-dark);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   position: relative;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.background-preview:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 2px 12px rgba(0, 0, 0, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .preview-text {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: -0.2px;
 }
 
 /* 设置页脚 */
@@ -960,137 +1390,353 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-dark);
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.settings-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), transparent);
+  border-radius: 2px;
+}
+
+.settings-footer :deep(.el-button) {
+  padding: 10px 24px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  letter-spacing: -0.2px;
+}
+
+.settings-footer :deep(.el-button--primary) {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.settings-footer :deep(.el-button--primary:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
+.settings-footer :deep(.el-button:not(.el-button--primary)) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.settings-footer :deep(.el-button:not(.el-button--primary):hover) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 /* 滚动条样式 */
 .settings-content::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .settings-content::-webkit-scrollbar-track {
-  background: var(--surface-dark);
-  border-radius: 3px;
+  background: transparent;
+  border-radius: 4px;
 }
 
 .settings-content::-webkit-scrollbar-thumb {
-  background: var(--border-dark);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.3s ease;
 }
 
 .settings-content::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.2);
+  background-clip: padding-box;
 }
+
+/* 输入框样式优化 */
+.form-item :deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: none;
+  transition: all 0.3s ease;
+}
+
+.form-item :deep(.el-input__wrapper:hover) {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.form-item :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-item :deep(.el-input__inner) {
+  color: var(--text-primary);
+}
+
+.form-item :deep(.el-input__inner::placeholder) {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* 选择器样式优化 */
+.form-item :deep(.el-select) {
+  width: 100%;
+}
+
+.form-item :deep(.el-select .el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.form-item :deep(.el-select:hover .el-input__wrapper) {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
 /* 图片来源选项 */
 .image-source-options {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.image-source-options :deep(.el-radio-group) {
+  display: flex;
+  gap: 24px;
+}
+
+.image-source-options :deep(.el-radio__input.is-checked .el-radio__inner) {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 /* 本地图片上传区域 */
 .local-image-upload {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .upload-demo {
   width: 100%;
 }
 
-.el-upload-dragger {
+.upload-demo :deep(.el-upload-dragger) {
   width: 100%;
-  height: 180px;
+  height: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--surface-dark);
-  border: 2px dashed var(--border-dark);
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.el-upload-dragger:hover {
+.upload-demo :deep(.el-upload-dragger::before) {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.upload-demo :deep(.el-upload-dragger:hover) {
   border-color: var(--primary-color);
-  background: var(--surface-dark-hover);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.upload-demo :deep(.el-upload-dragger:hover::before) {
+  opacity: 1;
 }
 
 .el-icon--upload {
-  font-size: 48px;
-  color: var(--text-secondary);
+  font-size: 52px;
+  color: var(--primary-color);
   margin-bottom: 16px;
+  filter: drop-shadow(0 2px 8px rgba(37, 99, 235, 0.3));
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.upload-demo :deep(.el-upload-dragger:hover .el-icon--upload) {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .el-upload__text {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.2px;
 }
 
 .el-upload__text em {
   color: var(--primary-color);
   font-style: normal;
+  font-weight: 600;
 }
 
 .el-upload__tip {
   font-size: 12px;
   color: var(--text-secondary);
   text-align: center;
-  margin-top: 8px;
+  margin-top: 12px;
+  opacity: 0.8;
+  position: relative;
+  z-index: 1;
 }
 
 /* 本地图片预览 */
 .local-image-preview {
-  margin-top: 20px;
-  border: 1px solid var(--border-dark);
-  border-radius: 8px;
+  margin-top: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--surface-dark);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.local-image-preview:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
 }
 
 .preview-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: var(--surface-darker);
-  border-bottom: 1px solid var(--border-dark);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .preview-header span {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
 .preview-stats {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .file-size {
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-secondary);
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
 }
 
 .clear-btn {
   color: var(--error-color);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  transform: scale(1.05);
+  text-decoration: underline;
 }
 
 .preview-image {
   width: 100%;
-  max-height: 200px;
+  max-height: 240px;
   object-fit: contain;
   display: block;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .preview-info {
-  padding: 12px 16px;
+  padding: 14px 18px;
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-secondary);
   text-align: center;
-  background: var(--surface-darker);
-  border-top: 1px solid var(--border-dark);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  letter-spacing: -0.1px;
+}
+
+/* 颜色选择器样式 */
+.color-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.color-picker-wrapper :deep(.el-color-picker) {
+  height: 40px;
+}
+
+.color-picker-wrapper :deep(.el-color-picker__trigger) {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-picker-wrapper :deep(.el-color-picker__trigger:hover) {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transform: scale(1.05);
+}
+
+.color-preview {
+  flex: 1;
+  height: 40px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.color-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 渐变颜色选择器优化 */
+.gradient-color-item :deep(.el-color-picker) {
+  height: 40px;
+}
+
+.gradient-color-item :deep(.el-color-picker__trigger) {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.gradient-color-item :deep(.el-color-picker__trigger:hover) {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transform: scale(1.05);
 }
 </style>
