@@ -112,18 +112,20 @@ defineProps<Props>()
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: var(--surface-dark);
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 12px;
   cursor: pointer;
   transition: all var(--transition-fast) ease;
-  border: 1px solid var(--border-dark);
+  border: 1px solid rgba(76, 83, 103, 0.3);
   color: var(--text-primary);
 }
 
 .example-item:hover {
-  background: var(--surface-dark-hover);
+  background: rgba(15, 23, 42, 0.3);
   transform: translateY(-2px);
-  border-color: var(--primary-color);
+  border-color: rgba(37, 99, 235, 0.5);
 }
 
 .example-icon {

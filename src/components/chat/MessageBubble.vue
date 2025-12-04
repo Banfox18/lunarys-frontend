@@ -243,16 +243,21 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
 }
 
 .message-bubble.user-message .message-text {
-  background: var(--primary-color);
+  background: rgba(37, 99, 235, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text-white);
   border-bottom-right-radius: 4px;
+  border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .message-bubble.ai-message .message-text {
-  background: var(--surface-dark);
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
-  border: 1px solid var(--border-dark);
+  border: 1px solid rgba(76, 83, 103, 0.3);
 }
 
 .plain-text {

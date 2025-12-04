@@ -175,7 +175,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
-  background: var(--surface-dark);
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid transparent;
   min-height: 60px;
   position: relative;
@@ -187,16 +189,18 @@ onUnmounted(() => {
 }
 
 .conversation-item:hover {
-  background: var(--surface-dark-hover);
-  border-color: var(--border-dark);
+  background: rgba(15, 23, 42, 0.3);
+  border-color: rgba(76, 83, 103, 0.3);
   transform: translateX(4px);
   box-shadow: var(--shadow-md);
 }
 
 .conversation-item.active {
-  background: var(--primary-color);
+  background: rgba(37, 99, 235, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text-white);
-  border-color: var(--primary-light);
+  border-color: rgba(37, 99, 235, 0.5);
 }
 
 .conversation-item .title {

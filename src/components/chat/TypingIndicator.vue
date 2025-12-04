@@ -63,8 +63,10 @@ onMounted(() => {
 
 .typing-bubble {
   padding: 12px 16px;
-  background: var(--surface-dark);
-  border: 1px solid var(--border-dark);
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(76, 83, 103, 0.3);
   border-radius: 16px;
   border-bottom-left-radius: 4px;
   display: flex;
