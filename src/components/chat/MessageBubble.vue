@@ -177,99 +177,44 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
 <style scoped>
 .message-bubble {
   display: flex;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   gap: 12px;
   position: relative;
-  opacity: 0;
-  animation: messageFadeIn 0.4s ease-out forwards;
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.message-bubble:hover {
-  transform: translateX(2px);
 }
 
 .message-bubble.user-message {
   flex-direction: row-reverse;
 }
 
-.message-bubble.user-message:hover {
-  transform: translateX(-2px);
-}
-
 .message-avatar {
   flex-shrink: 0;
-  position: relative;
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.avatar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  padding: 1.5px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.message-bubble:hover .avatar::before {
-  opacity: 1;
+  font-size: 16px;
 }
 
 .user-avatar {
-  background: rgba(59, 130, 246, 0.15);
-  color: rgba(147, 197, 253, 0.9);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.message-bubble:hover .user-avatar {
-  background: rgba(59, 130, 246, 0.2);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  background: var(--primary-color);
+  color: var(--text-white);
 }
 
 .ai-avatar {
-  background: rgba(124, 58, 237, 0.15);
-  color: rgba(196, 181, 253, 0.9);
-  border: 1px solid rgba(124, 58, 237, 0.2);
-}
-
-.message-bubble:hover .ai-avatar {
-  background: rgba(124, 58, 237, 0.2);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  background: var(--secondary-color);
+  color: var(--text-white);
 }
 
 .message-content {
-  max-width: 75%;
+  max-width: 80%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+  gap: 4px;
 }
 
 .message-bubble.user-message .message-content {
@@ -285,75 +230,41 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .message-role {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-secondary);
-  opacity: 0.7;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: opacity 0.2s ease;
-}
-
-.message-bubble:hover .message-role {
-  opacity: 1;
+  opacity: 0.8;
 }
 
 .message-text {
-  padding: 14px 18px;
-  border-radius: 14px;
-  line-height: 1.6;
+  padding: 12px 16px;
+  border-radius: 16px;
+  line-height: 1.5;
   word-wrap: break-word;
   white-space: pre-wrap;
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .message-bubble.user-message .message-text {
-  background: rgba(59, 130, 246, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: rgba(255, 255, 255, 0.95);
+  background: rgba(37, 99, 235, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-white);
   border-bottom-right-radius: 4px;
-  border: 1px solid rgba(59, 130, 246, 0.15);
-}
-
-.message-bubble.user-message:hover .message-text {
-  background: rgba(59, 130, 246, 0.16);
-  border-color: rgba(59, 130, 246, 0.25);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
-  transform: translateY(-1px);
+  border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .message-bubble.ai-message .message-text {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.message-bubble.ai-message:hover .message-text {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-@keyframes messageFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  border: 1px solid rgba(76, 83, 103, 0.3);
 }
 
 .plain-text {
@@ -362,41 +273,29 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
 }
 
 .message-time {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-  padding: 0 4px;
-}
-
-.message-bubble:hover .message-time {
-  opacity: 0.9;
+  opacity: 0.7;
 }
 
 .streaming-indicator {
   display: inline-block;
-  margin-left: 10px;
+  margin-left: 8px;
   vertical-align: middle;
 }
 
 .typing-dots {
   display: inline-flex;
-  gap: 3px;
-  align-items: center;
-  padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  gap: 2px;
 }
 
 .typing-dots span {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--text-secondary);
   animation: typing 1.4s infinite ease-in-out;
-  opacity: 0.6;
 }
-
 /* 悬停操作栏样式 */
 .hover-action-bar {
   position: absolute;
@@ -509,11 +408,6 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
 
 .action-button:hover::after {
   transform: translateX(100%) rotate(45deg);
-}
-
-/* 复制按钮特定样式 */
-.copy-button {
-  /* 可以添加特定样式，如果需要的话 */
 }
 
 .typing-dots span:nth-child(1) {
