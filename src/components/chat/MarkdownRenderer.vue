@@ -19,10 +19,10 @@ const props = defineProps<Props>()
 
 // 创建 markdown-it 实例
 const md = new MarkdownIt({
-  html: true,         // 允许 HTML 标签
-  linkify: true,      // 自动链接检测
-  typographer: true,  // 排版优化
-  breaks: true,       // 将换行符转换为 <br>
+  html: true, // 允许 HTML 标签
+  linkify: true, // 自动链接检测
+  typographer: true, // 排版优化
+  breaks: true, // 将换行符转换为 <br>
 
   // 代码高亮函数
   highlight: function (str: string, lang: string) {
@@ -36,28 +36,26 @@ const md = new MarkdownIt({
 
     // 如果没有指定语言或语言不支持，使用默认高亮
     return hljs.highlightAuto(str).value
-  }
+  },
 })
 
 // 添加 KaTeX 插件 - 解决数学公式问题
 md.use(mk, {
-  throwOnError: false,      // 不抛出错误
-  errorColor: '#cc0000',    // 错误颜色
+  throwOnError: false, // 不抛出错误
+  errorColor: '#cc0000', // 错误颜色
   delimiters: [
-    { left: '$$', right: '$$', display: true },     // 块级公式
-    { left: '$', right: '$', display: false },      // 行内公式
-    { left: '\\(', right: '\\)', display: false },  // 行内公式 (LaTeX 风格)
-    { left: '\\[', right: '\\]', display: true }    // 块级公式 (LaTeX 风格)
-  ]
+    { left: '$$', right: '$$', display: true }, // 块级公式
+    { left: '$', right: '$', display: false }, // 行内公式
+    { left: '\\(', right: '\\)', display: false }, // 行内公式 (LaTeX 风格)
+    { left: '\\[', right: '\\]', display: true }, // 块级公式 (LaTeX 风格)
+  ],
 })
-
 
 // 计算属性：渲染后的内容
 const renderedContent = computed(() => {
   if (!props.content) return ''
 
   try {
-
     // 渲染为 HTML
     const html = md.render(props.content)
 
@@ -129,12 +127,24 @@ const renderedContent = computed(() => {
   color: var(--text-primary);
 }
 
-.markdown-content :deep(h1) { font-size: 1.5em; }
-.markdown-content :deep(h2) { font-size: 1.3em; }
-.markdown-content :deep(h3) { font-size: 1.2em; }
-.markdown-content :deep(h4) { font-size: 1.1em; }
-.markdown-content :deep(h5) { font-size: 1em; }
-.markdown-content :deep(h6) { font-size: 0.9em; }
+.markdown-content :deep(h1) {
+  font-size: 1.5em;
+}
+.markdown-content :deep(h2) {
+  font-size: 1.3em;
+}
+.markdown-content :deep(h3) {
+  font-size: 1.2em;
+}
+.markdown-content :deep(h4) {
+  font-size: 1.1em;
+}
+.markdown-content :deep(h5) {
+  font-size: 1em;
+}
+.markdown-content :deep(h6) {
+  font-size: 0.9em;
+}
 
 /* 代码样式 */
 .markdown-content :deep(code) {

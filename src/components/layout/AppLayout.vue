@@ -22,7 +22,7 @@ const toggleSidebar = () => {
 .app-layout {
   display: flex;
   height: 100vh;
-  background: var(--bg-dark);
+  background: transparent;
 }
 
 .sidebar {

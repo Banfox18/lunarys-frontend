@@ -100,7 +100,7 @@ const closeSettings = () => {
 .sidebar {
   display: flex;
   flex-direction: column;
-  background: var(--surface-dark);
+  background: transparent;
   border-right: 1px solid var(--border-dark);
   transition: all var(--transition-normal) ease;
   min-width: 280px;

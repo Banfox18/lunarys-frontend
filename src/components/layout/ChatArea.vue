@@ -50,7 +50,7 @@ const chatBackgroundStyle = computed(() => {
     case 'image':
       return {
         backgroundImage: `url(${background.imageUrl})`,
-        opacity: background.imageOpacity || 0.8  // 只影响背景层
+        opacity: background.imageOpacity || 0.8, // 只影响背景层
       }
     default:
       return {}
@@ -61,7 +61,7 @@ const chatBackgroundStyle = computed(() => {
 <template>
   <div class="chat-area">
     <!-- 背景层 -->
-    <div class="chat-background" :style="chatBackgroundStyle"></div>
+<!--    <div class="chat-background" :style="chatBackgroundStyle"></div>-->
 
     <!-- 内容层 -->
     <div class="chat-content">
@@ -119,7 +119,7 @@ const chatBackgroundStyle = computed(() => {
 }
 
 /* 为图片背景添加遮罩效果 */
-.chat-area:has(.chat-background[style*="background-image"]) .messages-container {
+.chat-area:has(.chat-background[style*='background-image']) .messages-container {
   background: transparent;
   backdrop-filter: blur(0px);
   border-radius: 8px;
@@ -133,7 +133,7 @@ const chatBackgroundStyle = computed(() => {
 }
 
 /* 为图片背景下的输入区域添加遮罩 */
-.chat-area:has(.chat-background[style*="background-image"]) .input-container {
+.chat-area:has(.chat-background[style*='background-image']) .input-container {
   background: transparent;
   backdrop-filter: blur(0px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -158,4 +158,3 @@ const chatBackgroundStyle = computed(() => {
   background: rgba(255, 255, 255, 0.3);
 }
 </style>
-
