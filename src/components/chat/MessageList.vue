@@ -1,6 +1,8 @@
 <!-- src/components/chat/MessageList.vue -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Message } from '@/types/chat'
+import { useSettingsStore } from '@/stores/settings'
 import MessageBubble from './MessageBubble.vue'
 import TypingIndicator from './TypingIndicator.vue'
 
@@ -10,6 +12,14 @@ interface Props {
 }
 
 defineProps<Props>()
+
+const settingsStore = useSettingsStore()
+
+// 获取头像配置
+const userAvatar = computed(() => settingsStore.getUserAvatar())
+const aiAvatar = computed(() => settingsStore.getAiAvatar())
+const userAvatarBg = computed(() => settingsStore.avatars?.userAvatarBg)
+const aiAvatarBg = computed(() => settingsStore.avatars?.aiAvatarBg)
 </script>
 
 <template>
@@ -42,6 +52,10 @@ defineProps<Props>()
         :key="message.id || message.createdAt"
         :message="message"
         :is-streaming="isLoading && message.role === 'assistant' && message.content === ''"
+        :user-avatar="userAvatar"
+        :ai-avatar="aiAvatar"
+        :user-avatar-bg="userAvatarBg"
+        :ai-avatar-bg="aiAvatarBg"
       />
     </TransitionGroup>
 

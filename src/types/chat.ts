@@ -50,6 +50,14 @@ export interface ChatBackground {
   conversationId?: number
 }
 
+// 头像配置类型
+export interface AvatarConfig {
+  userAvatar?: string // 用户头像，支持URL或emoji，为空则不显示
+  aiAvatar?: string // AI头像，支持URL或emoji，为空则不显示
+  userAvatarBg?: string // 用户头像背景色，支持透明（transparent）
+  aiAvatarBg?: string // AI头像背景色，支持透明（transparent）
+}
+
 // 设置类型
 export interface AppSettings {
   theme: 'dark' | 'light'
@@ -60,4 +68,6 @@ export interface AppSettings {
   // 新增：聊天背景设置
   chatBackground?: ChatBackground
   conversationBackgrounds?: Record<number, ChatBackground> // 会话特定背景
+  // 新增：头像配置
+  avatars?: AvatarConfig
 }

@@ -1,7 +1,7 @@
 // src/stores/settings.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { AppSettings, AIModel, ChatBackground } from '@/types/chat'
+import type { AppSettings, AIModel, ChatBackground, AvatarConfig } from '@/types/chat'
 
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<AppSettings>({
@@ -15,7 +15,14 @@ export const useSettingsStore = defineStore('settings', () => {
       type: 'none',
       color: 'var(--surface-dark)'
     },
-    conversationBackgrounds: {}
+    conversationBackgrounds: {},
+    // 新增：默认头像配置
+    avatars: {
+      userAvatar: '👤',
+      aiAvatar: '🤖',
+      userAvatarBg: 'transparent',
+      aiAvatarBg: 'transparent'
+    }
   })
 
   // 计算属性
@@ -53,6 +60,12 @@ export const useSettingsStore = defineStore('settings', () => {
   const conversationBackgrounds = computed({
     get: () => settings.value.conversationBackgrounds || {},
     set: (value) => { settings.value.conversationBackgrounds = value }
+  })
+
+  // 新增：头像配置计算属性
+  const avatars = computed({
+    get: () => settings.value.avatars || { userAvatar: '👤', aiAvatar: '🤖', userAvatarBg: 'transparent', aiAvatarBg: 'transparent' },
+    set: (value) => { settings.value.avatars = value }
   })
 
   // 操作方法
@@ -107,6 +120,19 @@ export const useSettingsStore = defineStore('settings', () => {
     return chatBackground.value
   }
 
+  // 新增：头像设置方法
+  const setAvatars = (avatarConfig: AvatarConfig) => {
+    settings.value.avatars = { ...settings.value.avatars, ...avatarConfig }
+  }
+
+  const getUserAvatar = (): string | undefined => {
+    return settings.value.avatars?.userAvatar
+  }
+
+  const getAiAvatar = (): string | undefined => {
+    return settings.value.avatars?.aiAvatar
+  }
+
   // 持久化（可选）
   const loadSettings = () => {
     const saved = localStorage.getItem('app-settings')
@@ -137,6 +163,7 @@ export const useSettingsStore = defineStore('settings', () => {
     apiKey,
     chatBackground,
     conversationBackgrounds,
+    avatars,
 
     // 操作方法
     toggleStreaming,
@@ -149,6 +176,9 @@ export const useSettingsStore = defineStore('settings', () => {
     getConversationBackground,
     removeConversationBackground,
     getCurrentBackground,
+    setAvatars,
+    getUserAvatar,
+    getAiAvatar,
     saveSettings
   }
 })

@@ -5,9 +5,41 @@
     @mouseenter="isHovering = true"
     @mouseleave="isHovering = false"
   >
-    <div class="message-avatar">
-      <div v-if="isUser" class="avatar user-avatar">👤</div>
-      <div v-else class="avatar ai-avatar">🤖</div>
+    <div v-if="displayAvatar" class="message-avatar">
+      <div
+        v-if="isUser"
+        class="avatar user-avatar"
+        :style="{
+          backgroundColor:
+            userAvatarBg && userAvatarBg !== 'transparent' ? userAvatarBg : 'var(--primary-color)',
+          backgroundImage:
+            userAvatarBg === 'transparent'
+              ? 'repeating-conic-gradient(#808080 0% 25%, #ffffff 0% 50%) 50% / 8px 8px'
+              : userAvatarBg && userAvatarBg !== 'transparent'
+                ? 'none'
+                : undefined,
+        }"
+      >
+        <img v-if="isImageUrl(userAvatar)" :src="userAvatar" alt="用户头像" class="avatar-image" />
+        <span v-else-if="userAvatar">{{ userAvatar }}</span>
+      </div>
+      <div
+        v-else
+        class="avatar ai-avatar"
+        :style="{
+          backgroundColor:
+            aiAvatarBg && aiAvatarBg !== 'transparent' ? aiAvatarBg : 'var(--secondary-color)',
+          backgroundImage:
+            aiAvatarBg === 'transparent'
+              ? 'repeating-conic-gradient(#808080 0% 25%, #ffffff 0% 50%) 50% / 8px 8px'
+              : aiAvatarBg && aiAvatarBg !== 'transparent'
+                ? 'none'
+                : undefined,
+        }"
+      >
+        <img v-if="isImageUrl(aiAvatar)" :src="aiAvatar" alt="AI头像" class="avatar-image" />
+        <span v-else-if="aiAvatar">{{ aiAvatar }}</span>
+      </div>
     </div>
 
     <div class="message-content">
@@ -57,14 +89,14 @@
       </div>
 
       <div class="message-time">
-        {{ formatMessageTime(message.createdAt) }}
+        {{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, withDefaults } from 'vue'
 import type { Message } from '@/types/chat'
 import MarkdownRenderer from './MarkdownRenderer.vue'
 import ReasoningProcess from './ReasoningProcess.vue'
@@ -73,12 +105,38 @@ interface Props {
   message: Message
   isStreaming?: boolean
   reasoningContent?: string // 思考过程内容
+  userAvatar?: string // 用户头像，支持URL或emoji，为空则不显示
+  aiAvatar?: string // AI头像，支持URL或emoji，为空则不显示
+  userAvatarBg?: string // 用户头像背景色
+  aiAvatarBg?: string // AI头像背景色
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  userAvatar: undefined,
+  aiAvatar: undefined,
+  userAvatarBg: undefined,
+  aiAvatarBg: undefined,
+})
 
 const isUser = computed(() => props.message.role === 'user')
 const copyStatus = ref<'idle' | 'success' | 'error'>('idle')
+
+// 判断是否为图片URL
+const isImageUrl = (avatar: string | undefined): boolean => {
+  if (!avatar) return false
+  return (
+    avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:image')
+  )
+}
+
+// 计算是否显示头像
+const displayAvatar = computed(() => {
+  if (isUser.value) {
+    return props.userAvatar !== undefined && props.userAvatar !== ''
+  } else {
+    return props.aiAvatar !== undefined && props.aiAvatar !== ''
+  }
+})
 
 const isHovering = ref(false)
 // 复制按钮图标
@@ -198,15 +256,24 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   align-items: center;
   justify-content: center;
   font-size: 16px;
+  overflow: hidden;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-avatar {
-  background: var(--primary-color);
+  /* 默认背景色，如果设置了自定义背景色则会被内联样式覆盖 */
+  background-color: var(--primary-color);
   color: var(--text-white);
 }
 
 .ai-avatar {
-  background: var(--secondary-color);
+  /* 默认背景色，如果设置了自定义背景色则会被内联样式覆盖 */
+  background-color: var(--secondary-color);
   color: var(--text-white);
 }
 
