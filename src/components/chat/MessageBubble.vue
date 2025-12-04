@@ -11,13 +11,11 @@
         class="avatar user-avatar"
         :style="{
           backgroundColor:
-            userAvatarBg && userAvatarBg !== 'transparent' ? userAvatarBg : 'var(--primary-color)',
+            userAvatarBg === 'transparent' ? 'transparent' : userAvatarBg || 'var(--primary-color)',
           backgroundImage:
             userAvatarBg === 'transparent'
               ? 'repeating-conic-gradient(#808080 0% 25%, #ffffff 0% 50%) 50% / 8px 8px'
-              : userAvatarBg && userAvatarBg !== 'transparent'
-                ? 'none'
-                : undefined,
+              : 'none',
         }"
       >
         <img v-if="isImageUrl(userAvatar)" :src="userAvatar" alt="用户头像" class="avatar-image" />
@@ -28,13 +26,11 @@
         class="avatar ai-avatar"
         :style="{
           backgroundColor:
-            aiAvatarBg && aiAvatarBg !== 'transparent' ? aiAvatarBg : 'var(--secondary-color)',
+            aiAvatarBg === 'transparent' ? 'transparent' : aiAvatarBg || 'var(--secondary-color)',
           backgroundImage:
             aiAvatarBg === 'transparent'
               ? 'repeating-conic-gradient(#808080 0% 25%, #ffffff 0% 50%) 50% / 8px 8px'
-              : aiAvatarBg && aiAvatarBg !== 'transparent'
-                ? 'none'
-                : undefined,
+              : 'none',
         }"
       >
         <img v-if="isImageUrl(aiAvatar)" :src="aiAvatar" alt="AI头像" class="avatar-image" />

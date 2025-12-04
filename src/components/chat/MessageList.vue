@@ -15,11 +15,12 @@ defineProps<Props>()
 
 const settingsStore = useSettingsStore()
 
-// 获取头像配置
+// 获取头像配置 - 使用 computed 确保响应式
 const userAvatar = computed(() => settingsStore.getUserAvatar())
 const aiAvatar = computed(() => settingsStore.getAiAvatar())
-const userAvatarBg = computed(() => settingsStore.avatars?.userAvatarBg)
-const aiAvatarBg = computed(() => settingsStore.avatars?.aiAvatarBg)
+// 直接访问 settings ref 中的 avatars，确保响应式更新
+const userAvatarBg = computed(() => settingsStore.settings.avatars?.userAvatarBg)
+const aiAvatarBg = computed(() => settingsStore.settings.avatars?.aiAvatarBg)
 </script>
 
 <template>
@@ -121,7 +122,8 @@ const aiAvatarBg = computed(() => settingsStore.avatars?.aiAvatarBg)
 }
 
 @keyframes iconFloat {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
   50% {
@@ -180,12 +182,7 @@ const aiAvatarBg = computed(() => settingsStore.avatars?.aiAvatarBg)
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   transition: left 0.5s ease;
 }
 

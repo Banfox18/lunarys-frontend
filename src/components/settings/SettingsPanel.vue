@@ -117,8 +117,8 @@ const currentConversationTitle = computed(
 const avatarConfig = ref({
   userAvatar: settingsStore.getUserAvatar() || '👤',
   aiAvatar: settingsStore.getAiAvatar() || '🤖',
-  userAvatarBg: settingsStore.avatars?.userAvatarBg || 'transparent',
-  aiAvatarBg: settingsStore.avatars?.aiAvatarBg || 'transparent',
+  userAvatarBg: settingsStore.settings.avatars?.userAvatarBg || 'transparent',
+  aiAvatarBg: settingsStore.settings.avatars?.aiAvatarBg || 'transparent',
 })
 
 // 头像来源选项
@@ -773,7 +773,7 @@ onUnmounted(() => {
               placeholder="输入您的DeepSeek API Key"
               show-password
             />
-            <div class="form-hint">您的API Key仅存储在本地浏览器中，不会发送到任何其他服务器。</div>
+            <div class="form-hint">*您的API Key仅存储在本地，不会发送到任何其他服务器。</div>
           </div>
         </div>
       </div>
