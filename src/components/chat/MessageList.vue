@@ -28,8 +28,8 @@ const aiAvatarBg = computed(() => settingsStore.settings.avatars?.aiAvatarBg)
     <!-- 欢迎消息 -->
     <div v-if="messages.length === 0" class="welcome-message">
       <div class="welcome-icon">🌟</div>
-      <h2 class="welcome-title">欢迎使用 Lunarys</h2>
-      <p class="welcome-subtitle">我是您的AI助手，随时为您提供帮助</p>
+      <h2 class="welcome-title">欢迎回到 Lunarys ！</h2>
+      <p class="welcome-subtitle">如果你需要任何帮助，请随时告诉我~</p>
       <div class="welcome-examples">
         <div class="example-item">
           <span class="example-icon">💡</span>

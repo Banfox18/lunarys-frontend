@@ -1,13 +1,11 @@
 <!-- src/components/layout/ChatArea.vue -->
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import { useChatStore } from '@/stores/chat'
-import { useSettingsStore } from '@/stores/settings'
 import MessageList from '@/components/chat/MessageList.vue'
 import InputArea from '@/components/chat/InputArea.vue'
 
 const chatStore = useChatStore()
-const settingsStore = useSettingsStore()
 
 const messagesEndRef = ref<HTMLElement>()
 
@@ -24,45 +22,10 @@ watch(() => chatStore.messages.length, scrollToBottom, { immediate: true })
 const handleSendMessage = async (content: string) => {
   await chatStore.sendMessage(content)
 }
-
-//获取当前聊天背景样式
-const chatBackgroundStyle = computed(() => {
-  const currentConversationId = chatStore.currentConversation?.id
-  const background = currentConversationId
-    ? settingsStore.getCurrentBackground(currentConversationId)
-    : settingsStore.chatBackground
-
-  if (!background || background.type === 'none') {
-    return {}
-  }
-
-  switch (background.type) {
-    case 'solid':
-      return {
-        background: background.color || 'var(--bg-dark)',
-      }
-    case 'gradient':
-      return {
-        background: `linear-gradient(${background.gradientDirection || 'to right'},
-                   ${background.gradientColors?.[0] || '#667eea'},
-                   ${background.gradientColors?.[1] || '#764ba2'})`,
-      }
-    case 'image':
-      return {
-        backgroundImage: `url(${background.imageUrl})`,
-        opacity: background.imageOpacity || 0.8, // 只影响背景层
-      }
-    default:
-      return {}
-  }
-})
 </script>
 
 <template>
   <div class="chat-area">
-    <!-- 背景层 -->
-    <!--    <div class="chat-background" :style="chatBackgroundStyle"></div>-->
-
     <!-- 内容层 -->
     <div class="chat-content">
       <!-- 消息列表区域 -->

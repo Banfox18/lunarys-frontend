@@ -407,19 +407,19 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
     linear-gradient(
       to top,
       rgba(37, 99, 235, 0) 0%,
-      rgba(37, 99, 235, 0.3) 50%,
+      rgba(93, 136, 231, 0.2) 50%,
       rgba(37, 99, 235, 0) 100%
     ),
     /* 四周透明渐变层 */
       radial-gradient(
         circle at center,
-        rgba(37, 99, 235, 0.3) 0%,
+        rgba(93, 136, 231, 0.2) 0%,
         rgba(37, 99, 235, 0) 50%,
         transparent 100%
       );
   border: none;
-  border-left: 2px solid rgba(37, 99, 235, 0.2);
-  border-right: 2px solid rgba(37, 99, 235, 0.2);
+  border-left: 2px solid rgba(131, 162, 231, 0.1);
+  border-right: 2px solid rgba(131, 162, 231, 0.1);
   color: var(--text-primary);
   font-size: 12px;
   cursor: pointer;
