@@ -78,7 +78,11 @@ const handleInput = () => {
   <div class="input-area">
     <!-- 模式指示器 -->
     <div class="mode-indicator">
-      <div class="mode-toggle" @click="toggleStreaming" :title="enableStreaming ? '点击切换为完整模式' : '点击切换为流式模式'">
+      <div
+        class="mode-toggle"
+        @click="toggleStreaming"
+        :title="enableStreaming ? '点击切换为完整模式' : '点击切换为流式模式'"
+      >
         <div class="mode-dot" :class="{ streaming: enableStreaming }"></div>
         <span class="mode-text">
           {{ enableStreaming ? '流式模式' : '完整模式' }}
@@ -114,12 +118,7 @@ const handleInput = () => {
         <el-icon><Promotion /></el-icon>
       </el-button>
 
-      <el-button
-        v-else
-        type="warning"
-        class="stop-button"
-        @click="handleStop"
-      >
+      <el-button v-else type="warning" class="stop-button" @click="handleStop">
         <el-icon><VideoPause /></el-icon>
       </el-button>
     </div>
@@ -158,8 +157,10 @@ const handleInput = () => {
 
 <style scoped>
 .input-area {
-  background: rgba(46, 63, 92, 0.4);
-  border: 1px solid var(--border-dark);
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(76, 83, 103, 0.3);
   border-radius: 12px;
   padding: 12px;
   transition: all var(--transition-normal) ease;
@@ -341,7 +342,8 @@ const handleInput = () => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }

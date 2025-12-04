@@ -3,8 +3,8 @@
 import { ref } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import ConversationList from '@/components/conversation/ConversationList.vue'
-import SettingsPanel from '@/components/settings/SettingsPanel.vue'  // 新增
-import { ArrowLeft, ArrowRight, Plus, Setting } from '@element-plus/icons-vue'  // 确保导入Setting图标
+import SettingsPanel from '@/components/settings/SettingsPanel.vue' // 新增
+import { ArrowLeft, ArrowRight, Plus, Setting } from '@element-plus/icons-vue' // 确保导入Setting图标
 
 interface Props {
   collapsed?: boolean
@@ -25,7 +25,7 @@ const handleNewConversation = async () => {
 const handleToggle = () => {
   emit('toggle')
 }
-const showSettings = ref(false)  // 新增
+const showSettings = ref(false) // 新增
 
 const openSettings = () => {
   showSettings.value = true
@@ -34,7 +34,6 @@ const openSettings = () => {
 const closeSettings = () => {
   showSettings.value = false
 }
-
 </script>
 
 <template>
@@ -87,7 +86,7 @@ const closeSettings = () => {
         :close-on-click-modal="false"
         :close-on-press-escape="true"
         destroy-on-close
-        style="background: transparent; box-shadow: none;"
+        style="background: transparent; box-shadow: none"
         :lock-scroll="true"
       >
         <SettingsPanel @close="closeSettings" />
@@ -100,8 +99,10 @@ const closeSettings = () => {
 .sidebar {
   display: flex;
   flex-direction: column;
-  background: transparent;
-  border-right: 1px solid var(--border-dark);
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(76, 83, 103, 0.3);
   transition: all var(--transition-normal) ease;
   min-width: 280px;
   height: 100%;
