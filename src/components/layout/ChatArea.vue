@@ -61,7 +61,7 @@ const chatBackgroundStyle = computed(() => {
 <template>
   <div class="chat-area">
     <!-- 背景层 -->
-<!--    <div class="chat-background" :style="chatBackgroundStyle"></div>-->
+    <!--    <div class="chat-background" :style="chatBackgroundStyle"></div>-->
 
     <!-- 内容层 -->
     <div class="chat-content">

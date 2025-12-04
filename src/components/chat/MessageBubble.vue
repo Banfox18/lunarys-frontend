@@ -20,10 +20,7 @@
       <div class="message-text">
         <!-- 使用transition包裹 -->
         <transition name="action-bar">
-          <div
-            v-if="isHovering && !isStreaming"
-            class="hover-action-bar"
-          >
+          <div v-if="isHovering && !isStreaming" class="hover-action-bar">
             <button
               class="action-button copy-button"
               @click="copyToClipboard"
@@ -75,7 +72,7 @@ import ReasoningProcess from './ReasoningProcess.vue'
 interface Props {
   message: Message
   isStreaming?: boolean
-  reasoningContent?: string  // 思考过程内容
+  reasoningContent?: string // 思考过程内容
 }
 
 const props = defineProps<Props>()
@@ -87,16 +84,18 @@ const isHovering = ref(false)
 // 复制按钮图标
 const copyIcon = computed(() => {
   switch (copyStatus.value) {
-    case 'success': return '✅'
-    case 'error': return '❌'
-    default: return '📋'
+    case 'success':
+      return '✅'
+    case 'error':
+      return '❌'
+    default:
+      return '📋'
   }
 })
 
-
 // 是否显示思考过程
-const showReasoning = computed(() =>
-  !isUser.value && props.reasoningContent && props.reasoningContent.trim().length > 0
+const showReasoning = computed(
+  () => !isUser.value && props.reasoningContent && props.reasoningContent.trim().length > 0,
 )
 
 // 最终答案（从消息内容中提取或使用单独字段）
@@ -111,19 +110,26 @@ const copyToClipboard = async () => {
   try {
     await navigator.clipboard.writeText(props.message.content)
     copyStatus.value = 'success'
-    setTimeout(() => { copyStatus.value = 'idle' }, 2000)
+    setTimeout(() => {
+      copyStatus.value = 'idle'
+    }, 2000)
   } catch (error) {
     console.error('复制失败:', error)
     copyStatus.value = 'error'
-    setTimeout(() => { copyStatus.value = 'idle' }, 2000)
+    setTimeout(() => {
+      copyStatus.value = 'idle'
+    }, 2000)
   }
 }
 
 const copyButtonText = computed(() => {
   switch (copyStatus.value) {
-    case 'success': return '已复制到剪贴板'
-    case 'error': return '复制失败'
-    default: return '复制文本'
+    case 'success':
+      return '已复制到剪贴板'
+    case 'error':
+      return '复制失败'
+    default:
+      return '复制文本'
   }
 })
 // 时间格式化函数
@@ -132,14 +138,16 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   const now = new Date()
 
   // 判断是否是今天
-  const isToday = date.getDate() === now.getDate() &&
+  const isToday =
+    date.getDate() === now.getDate() &&
     date.getMonth() === now.getMonth() &&
     date.getFullYear() === now.getFullYear()
 
   // 判断是否是昨天
   const yesterday = new Date(now)
   yesterday.setDate(yesterday.getDate() - 1)
-  const isYesterday = date.getDate() === yesterday.getDate() &&
+  const isYesterday =
+    date.getDate() === yesterday.getDate() &&
     date.getMonth() === yesterday.getMonth() &&
     date.getFullYear() === yesterday.getFullYear()
 
@@ -147,7 +155,7 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   const timeStr = date.toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: false,
   })
 
   if (isToday) {
@@ -159,55 +167,109 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
     const dateStr = date.toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
     })
     return `${dateStr} ${timeStr}`
   }
 }
-
 </script>
 
 <style scoped>
 .message-bubble {
   display: flex;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   gap: 12px;
   position: relative;
+  opacity: 0;
+  animation: messageFadeIn 0.4s ease-out forwards;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.message-bubble:hover {
+  transform: translateX(2px);
 }
 
 .message-bubble.user-message {
   flex-direction: row-reverse;
 }
 
+.message-bubble.user-message:hover {
+  transform: translateX(-2px);
+}
+
 .message-avatar {
   flex-shrink: 0;
+  position: relative;
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.message-bubble:hover .avatar::before {
+  opacity: 1;
 }
 
 .user-avatar {
-  background: var(--primary-color);
-  color: var(--text-white);
+  background: rgba(59, 130, 246, 0.15);
+  color: rgba(147, 197, 253, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.message-bubble:hover .user-avatar {
+  background: rgba(59, 130, 246, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 .ai-avatar {
-  background: var(--secondary-color);
-  color: var(--text-white);
+  background: rgba(124, 58, 237, 0.15);
+  color: rgba(196, 181, 253, 0.9);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.message-bubble:hover .ai-avatar {
+  background: rgba(124, 58, 237, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
 }
 
 .message-content {
-  max-width: 80%;
+  max-width: 75%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .message-bubble.user-message .message-content {
@@ -223,41 +285,75 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .message-role {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-secondary);
-  opacity: 0.8;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s ease;
+}
+
+.message-bubble:hover .message-role {
+  opacity: 1;
 }
 
 .message-text {
-  padding: 12px 16px;
-  border-radius: 16px;
-  line-height: 1.5;
+  padding: 14px 18px;
+  border-radius: 14px;
+  line-height: 1.6;
   word-wrap: break-word;
   white-space: pre-wrap;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .message-bubble.user-message .message-text {
-  background: rgba(37, 99, 235, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: var(--text-white);
+  background: rgba(59, 130, 246, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.95);
   border-bottom-right-radius: 4px;
-  border: 1px solid rgba(37, 99, 235, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.message-bubble.user-message:hover .message-text {
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
 }
 
 .message-bubble.ai-message .message-text {
-  background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
-  border: 1px solid rgba(76, 83, 103, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.message-bubble.ai-message:hover .message-text {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+@keyframes messageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .plain-text {
@@ -266,29 +362,41 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
 }
 
 .message-time {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
-  opacity: 0.7;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 0 4px;
+}
+
+.message-bubble:hover .message-time {
+  opacity: 0.9;
 }
 
 .streaming-indicator {
   display: inline-block;
-  margin-left: 8px;
+  margin-left: 10px;
   vertical-align: middle;
 }
 
 .typing-dots {
   display: inline-flex;
-  gap: 2px;
+  gap: 3px;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
 }
 
 .typing-dots span {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--text-secondary);
   animation: typing 1.4s infinite ease-in-out;
+  opacity: 0.6;
 }
+
 /* 悬停操作栏样式 */
 .hover-action-bar {
   position: absolute;
@@ -340,13 +448,13 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
       rgba(37, 99, 235, 0.3) 50%,
       rgba(37, 99, 235, 0) 100%
     ),
-      /* 四周透明渐变层 */
-    radial-gradient(
-      circle at center,
-      rgba(37, 99, 235, 0.3) 0%,
-      rgba(37, 99, 235, 0) 50%,
-      transparent 100%
-    );
+    /* 四周透明渐变层 */
+      radial-gradient(
+        circle at center,
+        rgba(37, 99, 235, 0.3) 0%,
+        rgba(37, 99, 235, 0) 50%,
+        transparent 100%
+      );
   border: none;
   border-left: 2px solid rgba(37, 99, 235, 0.2);
   border-right: 2px solid rgba(37, 99, 235, 0.2);
@@ -403,18 +511,26 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
   transform: translateX(100%) rotate(45deg);
 }
 
-
-
 /* 复制按钮特定样式 */
 .copy-button {
   /* 可以添加特定样式，如果需要的话 */
 }
 
-.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+.typing-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typing-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 @keyframes typing {
-  0%, 80%, 100% { opacity: 0.3; }
-  40% { opacity: 1; }
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
 }
 </style>

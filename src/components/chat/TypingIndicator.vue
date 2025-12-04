@@ -38,23 +38,38 @@ onMounted(() => {
 .typing-indicator {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
-  animation: fadeIn 0.3s ease;
+  margin-bottom: 20px;
+  animation: fadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .typing-avatar {
-  flex: 0 0 32px;
+  flex: 0 0 36px;
 }
 
 .assistant-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  background: var(--secondary-color);
+  font-size: 18px;
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  color: rgba(196, 181, 253, 0.9);
+  animation: avatarPulse 2s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0);
+  }
 }
 
 .typing-content {
@@ -62,22 +77,23 @@ onMounted(() => {
 }
 
 .typing-bubble {
-  padding: 12px 16px;
-  background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(76, 83, 103, 0.3);
-  border-radius: 16px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   border-bottom-left-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  animation: pulse 2s infinite;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .typing-dots {
   display: flex;
-  gap: 4px;
+  gap: 5px;
+  align-items: center;
 }
 
 .dot {
@@ -86,6 +102,7 @@ onMounted(() => {
   border-radius: 50%;
   background: var(--text-secondary);
   animation: bounce 1.4s infinite ease-in-out both;
+  opacity: 0.6;
 }
 
 .dot:nth-child(1) {
@@ -94,44 +111,39 @@ onMounted(() => {
 .dot:nth-child(2) {
   animation-delay: -0.16s;
 }
+.dot:nth-child(3) {
+  animation-delay: 0s;
+}
 
 .typing-text {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   font-style: italic;
+  opacity: 0.8;
+  letter-spacing: 0.2px;
 }
 
 @keyframes bounce {
   0%,
   80%,
   100% {
-    transform: scale(0.8);
+    transform: scale(0.85);
     opacity: 0.5;
   }
   40% {
-    transform: scale(1);
+    transform: scale(1.1);
     opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
   }
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 </style>

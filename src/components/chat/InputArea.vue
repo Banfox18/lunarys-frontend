@@ -157,45 +157,89 @@ const handleInput = () => {
 
 <style scoped>
 .input-area {
-  background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(76, 83, 103, 0.3);
-  border-radius: 12px;
-  padding: 12px;
-  transition: all var(--transition-normal) ease;
-
-  /* 多层阴影效果 */
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 4px 24px rgba(0, 0, 0, 0.15),
+    0 1px 4px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.input-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .input-area:focus-within {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow:
+    0 6px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 3px rgba(59, 130, 246, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.input-area:focus-within::before {
+  opacity: 1;
 }
 
 /* 模式指示器 */
 .mode-indicator {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .mode-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 16px;
-  background: var(--surface-dark-hover);
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
   user-select: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(124, 58, 237, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .mode-toggle:hover {
-  background: var(--surface-dark-active);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mode-toggle:hover::before {
+  opacity: 1;
 }
 
 .mode-dot {
@@ -203,24 +247,48 @@ const handleInput = () => {
   height: 8px;
   border-radius: 50%;
   background: var(--text-secondary);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
 }
 
 .mode-dot.streaming {
-  background: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  background: rgba(59, 130, 246, 0.9);
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.15),
+    0 0 12px rgba(59, 130, 246, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(59, 130, 246, 0.15),
+      0 0 12px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px rgba(59, 130, 246, 0.2),
+      0 0 16px rgba(59, 130, 246, 0.4);
+  }
 }
 
 .mode-text {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.2px;
 }
 
 .mode-hint {
   font-size: 11px;
   color: var(--text-secondary);
-  opacity: 0.8;
+  opacity: 0.7;
+  position: relative;
+  z-index: 1;
 }
 
 /* 输入容器 */
@@ -253,20 +321,26 @@ const handleInput = () => {
   border: none;
   outline: none;
   color: var(--text-primary);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
   resize: none;
-  min-height: 20px;
+  min-height: 24px;
   max-height: 120px;
   font-family: inherit;
+  transition: all 0.2s ease;
 }
 
 .message-input::placeholder {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.message-input:focus {
+  color: var(--text-primary);
 }
 
 .message-input:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -274,15 +348,53 @@ const handleInput = () => {
 .send-button,
 .stop-button {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   padding: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.send-button {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(124, 58, 237, 0.2));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: rgba(147, 197, 253, 0.9);
+}
+
+.send-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(124, 58, 237, 0.3));
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0) scale(1);
 }
 
 .send-button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
+}
+
+.stop-button {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: rgba(251, 191, 36, 0.9);
+}
+
+.stop-button:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(239, 68, 68, 0.3));
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+}
+
+.stop-button:active {
+  transform: translateY(0) scale(1);
 }
 
 /* 工具栏 */
@@ -290,26 +402,35 @@ const handleInput = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-dark);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .toolbar-left,
 .toolbar-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .tool-button {
-  padding: 4px;
+  padding: 6px 8px;
   color: var(--text-secondary);
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
 }
 
 .tool-button:hover {
   color: var(--text-primary);
-  background: var(--surface-dark-hover);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.tool-button:active {
+  transform: translateY(0);
 }
 
 /* 指示器样式 */
@@ -317,48 +438,61 @@ const handleInput = () => {
 .complete-indicator {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
   color: var(--text-secondary);
-  padding: 2px 8px;
+  padding: 6px 12px;
   border-radius: 12px;
-  background: var(--surface-dark-hover);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.streaming-indicator:hover,
+.complete-indicator:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .pulse-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--primary-color);
-  animation: pulse 1.5s infinite;
+  background: rgba(59, 130, 246, 0.9);
+  animation: pulseDot 1.5s infinite;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
 .loading-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--warning-color);
-  animation: spin 1s linear infinite;
+  background: rgba(245, 158, 11, 0.9);
+  animation: spinDot 1s linear infinite;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
 }
 
-@keyframes pulse {
+@keyframes pulseDot {
   0%,
   100% {
     opacity: 1;
     transform: scale(1);
   }
   50% {
-    opacity: 0.5;
-    transform: scale(0.8);
+    opacity: 0.6;
+    transform: scale(0.85);
   }
 }
 
-@keyframes spin {
+@keyframes spinDot {
   0% {
-    transform: rotate(0deg);
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(0.9);
   }
   100% {
-    transform: rotate(360deg);
+    transform: rotate(360deg) scale(1);
   }
 }
 </style>
