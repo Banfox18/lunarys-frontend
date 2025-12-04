@@ -42,11 +42,11 @@ const closeSettings = () => {
       <!-- 顶部Logo区域 -->
       <div class="sidebar-header">
         <div class="logo" v-if="!collapsed">
-          <div class="logo-icon">🤖</div>
+          <div class="logo-icon"></div>
           <span class="logo-text">Lunarys</span>
         </div>
         <div class="logo-collapsed" v-else>
-          <div class="logo-icon">🤖</div>
+          <div class="logo-icon"></div>
         </div>
         <el-button type="text" class="toggle-btn" @click="handleToggle">
           <el-icon v-if="!collapsed"><ArrowLeft /></el-icon>
