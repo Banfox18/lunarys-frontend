@@ -87,6 +87,7 @@ const closeSettings = () => {
         :close-on-press-escape="true"
         destroy-on-close
         style="background: transparent; box-shadow: none"
+        align-center
         :lock-scroll="true"
       >
         <SettingsPanel @close="closeSettings" />
