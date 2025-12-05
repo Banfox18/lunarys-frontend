@@ -1,6 +1,10 @@
 <!-- src/components/layout/Sidebar.vue -->
 <script setup lang="ts">
 import { ref } from 'vue'
+
+defineOptions({
+  name: 'AppSidebar',
+})
 import { useChatStore } from '@/stores/chat'
 import ConversationList from '@/components/conversation/ConversationList.vue'
 import SettingsPanel from '@/components/settings/SettingsPanel.vue' // 新增
