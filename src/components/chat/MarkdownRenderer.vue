@@ -1,70 +1,47 @@
-<!-- src/components/chat/MarkdownRenderer.vue -->
+<!-- src/components/chat/MarkdownRenderer.vue - 使用 markstream-vue -->
 <template>
-  <div class="markdown-content" v-html="renderedContent"></div>
+  <div class="markdown-content">
+    <MarkdownRender
+      :content="content"
+      :code-block-stream="true"
+      :typewriter="false"
+      :batch-rendering="false"
+      :viewport-priority="false"
+      :defer-nodes-until-visible="false"
+      :max-live-nodes="0"
+      :is-dark="isDark"
+      :themes="themes"
+      @copy="handleCopy"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import MarkdownIt from 'markdown-it'
-import mk from '@iktakahiro/markdown-it-katex'
-import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.css'
-import 'katex/dist/katex.min.css'
+import MarkdownRender from 'markstream-vue'
+import { useSettingsStore } from '@/stores/settings'
 
 interface Props {
   content: string
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
+const emit = defineEmits<{
+  copy: [text: string]
+}>()
 
-// 创建 markdown-it 实例
-const md = new MarkdownIt({
-  html: true, // 允许 HTML 标签
-  linkify: true, // 自动链接检测
-  typographer: true, // 排版优化
-  breaks: true, // 将换行符转换为 <br>
+const settingsStore = useSettingsStore()
 
-  // 代码高亮函数
-  highlight: function (str: string, lang: string) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(str, { language: lang }).value
-      } catch (__) {
-        // 如果高亮失败，返回原始代码
-      }
-    }
+// 主题配置
+const isDark = computed(() => settingsStore.theme === 'dark')
+const themes = computed(() => ['github-dark', 'github-light'])
 
-    // 如果没有指定语言或语言不支持，使用默认高亮
-    return hljs.highlightAuto(str).value
-  },
-})
-
-// 添加 KaTeX 插件 - 解决数学公式问题
-md.use(mk, {
-  throwOnError: false, // 不抛出错误
-  errorColor: '#cc0000', // 错误颜色
-  delimiters: [
-    { left: '$$', right: '$$', display: true }, // 块级公式
-    { left: '$', right: '$', display: false }, // 行内公式
-    { left: '\\(', right: '\\)', display: false }, // 行内公式 (LaTeX 风格)
-    { left: '\\[', right: '\\]', display: true }, // 块级公式 (LaTeX 风格)
-  ],
-})
-
-// 计算属性：渲染后的内容
-const renderedContent = computed(() => {
-  if (!props.content) return ''
-
-  try {
-    // 渲染为 HTML
-    const html = md.render(props.content)
-
-    return html
-  } catch (error) {
-    console.error('Markdown 渲染错误:', error)
-    return `<div class="error">渲染错误: ${error.message}</div>`
+// 处理复制事件
+const handleCopy = (event: { text?: string }) => {
+  if (event?.text) {
+    emit('copy', event.text)
   }
-})
+}
 </script>
 
 <style scoped>
@@ -75,46 +52,12 @@ const renderedContent = computed(() => {
   overflow-wrap: break-word;
 }
 
-/* MathJax 数学公式样式 - 改为 KaTeX 样式 */
-.markdown-content :deep(.katex) {
-  font-size: 1.1em;
+/* 覆盖 markstream-vue 的默认样式以匹配现有设计 */
+.markdown-content :deep(.markdown-renderer) {
+  color: var(--text-primary);
 }
 
-.markdown-content :deep(.katex-display) {
-  margin: 16px 0;
-  padding: 12px;
-  background: var(--surface-dark);
-  border-radius: 8px;
-  text-align: center;
-  overflow-x: auto;
-  border: 1px solid var(--border-dark);
-}
-
-/* 行内数学公式样式 */
-.markdown-content :deep(.katex-inline) {
-  background: var(--surface-dark);
-  padding: 2px 4px;
-  border-radius: 4px;
-  border: 1px solid var(--border-dark);
-}
-
-/* 代码高亮样式 */
-.markdown-content :deep(.hljs) {
-  background: transparent;
-  padding: 0;
-}
-
-.markdown-content :deep(pre code.hljs) {
-  display: block;
-  overflow-x: auto;
-  padding: 1em;
-}
-
-/* 以下保持原有的样式不变 */
-.markdown-content :deep(p) {
-  margin: 8px 0;
-}
-
+/* 标题样式 */
 .markdown-content :deep(h1),
 .markdown-content :deep(h2),
 .markdown-content :deep(h3),
@@ -146,7 +89,12 @@ const renderedContent = computed(() => {
   font-size: 0.9em;
 }
 
-/* 代码样式 */
+/* 段落样式 */
+.markdown-content :deep(p) {
+  margin: 8px 0;
+}
+
+/* 代码块样式 */
 .markdown-content :deep(code) {
   background: var(--surface-dark);
   color: var(--text-primary);
@@ -244,5 +192,35 @@ const renderedContent = computed(() => {
   height: auto;
   border-radius: 8px;
   margin: 8px 0;
+}
+
+/* KaTeX 数学公式样式 */
+.markdown-content :deep(.katex) {
+  font-size: 1.1em;
+}
+
+.markdown-content :deep(.katex-display) {
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--surface-dark);
+  border-radius: 8px;
+  text-align: center;
+  overflow-x: auto;
+  border: 1px solid var(--border-dark);
+}
+
+.markdown-content :deep(.katex-inline) {
+  background: var(--surface-dark);
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-dark);
+}
+
+/* Mermaid 图表样式 */
+.markdown-content :deep(.mermaid-container) {
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: auto;
+  border: 1px solid var(--border-dark);
 }
 </style>

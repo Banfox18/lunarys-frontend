@@ -22,7 +22,7 @@ export const chatService = {
     onContent: (content: string) => void,
     onError: (error: string) => void,
     onComplete: (conversationId: number) => void,
-    onReasoning?: (reasoning: string) => void  // 新增：思考过程回调
+    onReasoning?: (reasoning: string) => void, // 新增：思考过程回调
   ): Promise<() => void> {
     let abortController: AbortController | null = null
 
@@ -32,7 +32,7 @@ export const chatService = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
-        signal: abortController.signal
+        signal: abortController.signal,
       })
 
       if (!response.ok) {
@@ -49,7 +49,6 @@ export const chatService = {
 
       // 修改processSSEStream调用，传入onReasoning回调
       this.processSSEStream(response.body, onContent, onError, onComplete, onReasoning)
-
     } catch (error) {
       if (error.name === 'AbortError') {
         onError('Request cancelled')
@@ -68,7 +67,7 @@ export const chatService = {
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request)
+      body: JSON.stringify(request),
     })
 
     if (!response.ok) {
@@ -86,7 +85,7 @@ export const chatService = {
     readableStream: ReadableStream<Uint8Array>,
     onContent: (content: string) => void,
     onError: (error: string) => void,
-    onComplete: (conversationId: number) => void
+    onComplete: (conversationId: number) => void,
   ): Promise<void> {
     const reader = readableStream.getReader()
     const decoder = new TextDecoder()
@@ -123,8 +122,7 @@ export const chatService = {
       }
     } catch (error) {
       if (error.name === 'AbortError') {
-          console.log('[SSE] 流被用户中止')
-
+        console.log('[SSE] 流被用户中止')
       } else {
         console.error('[SSE] 流处理错误:', error)
         onError(`流式传输错误: ${error.message}`)
@@ -140,7 +138,7 @@ export const chatService = {
     onContent: (content: string) => void,
     onError: (error: string) => void,
     onComplete: (conversationId: number) => void,
-    onReasoning?: (reasoning: string) => void
+    onReasoning?: (reasoning: string) => void,
   ): void {
     const lines = event.split('\n')
 
@@ -155,7 +153,7 @@ export const chatService = {
           console.log('[SSE] ', '[', data.type, '] -', data.data.substring(0, 50), '-')
 
           switch (data.type) {
-            case 'reasoning':  // 统一使用reasoning
+            case 'reasoning': // 统一使用reasoning
               if (onReasoning) {
                 onReasoning(data.data)
               }
@@ -192,7 +190,7 @@ export const chatService = {
     buffer: string,
     onContent: (content: string) => void,
     onError: (error: string) => void,
-    onComplete: (conversationId: number) => void
+    onComplete: (conversationId: number) => void,
   ): void {
     // 尝试按行处理缓冲区剩余数据
     const lines = buffer.split('\n')
@@ -254,7 +252,7 @@ export const chatService = {
   async deleteConversation(conversationId: number): Promise<void> {
     try {
       const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       })
 
       if (!response.ok) {
@@ -271,5 +269,5 @@ export const chatService = {
       // 如果后端没有实现删除接口，我们仍然在前端删除
       console.warn('后端删除接口可能未实现，仅在前端删除')
     }
-  }
+  },
 }

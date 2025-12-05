@@ -17,11 +17,11 @@ onMounted(() => {
 
 <template>
   <div class="typing-indicator">
-    <div class="typing-avatar">
+    <!-- <div class="typing-avatar">
       <div class="assistant-avatar">🤖</div>
-    </div>
+    </div> -->
 
-    <div class="typing-content">
+    <!-- <div class="typing-content">
       <div class="typing-bubble">
         <div class="typing-dots">
           <span class="dot"></span>
@@ -30,7 +30,7 @@ onMounted(() => {
         </div>
         <span class="typing-text">AI正在思考{{ dots }}</span>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
