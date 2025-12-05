@@ -64,7 +64,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-
 </script>
 
 <template>
@@ -72,23 +71,19 @@ onUnmounted(() => {
     class="conversation-item"
     :class="{
       active: isActive,
-      'is-confirming': isConfirmingDelete
+      'is-confirming': isConfirmingDelete,
     }"
     @click="handleClick"
   >
     <!-- 原内容（始终显示，确认删除时虚化） -->
-    <div class="item-content" :class="{ 'blurred': isConfirmingDelete }">
+    <div class="item-content" :class="{ blurred: isConfirmingDelete }">
       <div class="title">{{ conversation.title }}</div>
       <div class="preview">{{ conversation.preview }}</div>
     </div>
 
     <!-- 确认删除界面（显示在虚化内容上方） -->
     <transition name="fade">
-      <div
-        v-if="isConfirmingDelete"
-        ref="deleteConfirmRef"
-        class="delete-confirm-overlay"
-      >
+      <div v-if="isConfirmingDelete" ref="deleteConfirmRef" class="delete-confirm-overlay">
         <div class="delete-confirm">
           <div class="confirm-text">确认删除？</div>
           <div class="confirm-actions">
@@ -109,7 +104,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-
 /* 确认删除界面样式 */
 .delete-confirm {
   flex: 1;
@@ -119,7 +113,6 @@ onUnmounted(() => {
   justify-content: center;
   padding: 8px;
   width: 100%;
-
 }
 .delete-confirm-overlay {
   position: absolute;
@@ -158,8 +151,9 @@ onUnmounted(() => {
 .item-content {
   flex: 1;
   min-width: 0; /* 允许内容收缩 */
-  transition: filter var(--transition-slow) ease, opacity var(--transition-slow) ease;
-
+  transition:
+    filter var(--transition-slow) ease,
+    opacity var(--transition-slow) ease;
 }
 .item-content.blurred {
   filter: blur(2px);
@@ -182,7 +176,6 @@ onUnmounted(() => {
   min-height: 60px;
   position: relative;
 }
-
 
 .conversation-item.is-confirming {
   cursor: default;
@@ -215,7 +208,8 @@ onUnmounted(() => {
   color: var(--text-secondary);
   opacity: 0.8;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* 改为2行，更稳定 */
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -227,7 +221,6 @@ onUnmounted(() => {
 .conversation-item.active .preview {
   color: var(--text-white);
 }
-
 
 .delete-btn {
   opacity: 0;
@@ -246,5 +239,4 @@ onUnmounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
-
 </style>
