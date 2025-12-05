@@ -1,8 +1,6 @@
 <!-- 修改MessageBubble.vue -->
 <template>
-  <div
-    :class="['message-bubble', { 'user-message': isUser, 'ai-message': !isUser }]"
-  >
+  <div :class="['message-bubble', { 'user-message': isUser, 'ai-message': !isUser }]">
     <div v-if="displayAvatar" class="message-avatar">
       <div
         v-if="isUser"
@@ -294,6 +292,7 @@ const formatMessageTime = (timestamp: number | string | Date): string => {
 }
 
 .message-content {
+  width: fit-content;
   max-width: 80%;
   display: flex;
   flex-direction: column;
