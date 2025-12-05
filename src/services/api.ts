@@ -150,8 +150,6 @@ export const chatService = {
         try {
           const data: StreamResponse = JSON.parse(jsonStr)
 
-          console.log('[SSE] ', '[', data.type, '] -', data.data.substring(0, 50), '-')
-
           switch (data.type) {
             case 'reasoning': // 统一使用reasoning
               if (onReasoning) {

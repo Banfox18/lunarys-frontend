@@ -61,13 +61,8 @@ const monacoOptions = computed(() => ({
 const codeBlockProps = computed(() => ({
   showHeader: true, // 显示代码块头部（语言标签、操作按钮）
   showCopyButton: true, // 显示复制按钮
-  showExpandButton: false, // 显示展开/折叠按钮
-  showPreviewButton: false, // 显示预览按钮（HTML/SVG）
-  showFontSizeButtons: false, // 显示字体大小调整按钮
-  enableFontSizeControl: false, // 启用字体大小控制
   stream: true, // 启用流式更新（重要：让代码块支持增量更新）
-  loading: false, // 代码块是否处于加载状态
-  maxWidth: '100%',
+  loading: true, // 代码块是否处于加载状态
 }))
 
 // 处理复制事件
@@ -270,5 +265,121 @@ const handleCopy = (event: { text?: string }) => {
   background: rgba(15, 23, 42, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+/* 代码块头部按钮样式 - 匹配整体设计风格 */
+/* 通用选择器：匹配代码块容器内的所有按钮 */
+.markdown-content :deep([class*="code-block"] button),
+.markdown-content :deep([class*="CodeBlock"] button),
+.markdown-content :deep(.code-block-header button),
+.markdown-content :deep(.code-block-actions button),
+.markdown-content :deep(.code-header button),
+.markdown-content :deep(.code-actions button),
+.markdown-content :deep(button[class*="copy"]),
+.markdown-content :deep(button[class*="preview"]),
+.markdown-content :deep(button[class*="Copy"]),
+.markdown-content :deep(button[class*="Preview"]),
+/* 更通用的选择器：匹配任何包含 monaco 或代码块相关的容器内的按钮 */
+.markdown-content :deep([class*="monaco"] button),
+.markdown-content :deep([class*="Monaco"] button) {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 4px;
+  background: rgba(76, 83, 103, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(76, 83, 103, 0.15);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  opacity: 0.7;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* 按钮内的图标样式 */
+.markdown-content :deep([class*='code-block'] button svg),
+.markdown-content :deep([class*='CodeBlock'] button svg),
+.markdown-content :deep(.code-block-header button svg),
+.markdown-content :deep(.code-block-actions button svg),
+.markdown-content :deep([class*='monaco'] button svg),
+.markdown-content :deep([class*='Monaco'] button svg) {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  color: inherit;
+}
+
+.markdown-content :deep([class*='code-block'] button:hover),
+.markdown-content :deep([class*='CodeBlock'] button:hover),
+.markdown-content :deep(.code-block-header button:hover),
+.markdown-content :deep(.code-block-actions button:hover),
+.markdown-content :deep(.code-header button:hover),
+.markdown-content :deep(.code-actions button:hover),
+.markdown-content :deep(button[class*='copy']:hover),
+.markdown-content :deep(button[class*='preview']:hover),
+.markdown-content :deep(button[class*='Copy']:hover),
+.markdown-content :deep(button[class*='Preview']:hover),
+.markdown-content :deep([class*='monaco'] button:hover),
+.markdown-content :deep([class*='Monaco'] button:hover) {
+  background: rgba(76, 83, 103, 0.2);
+  border-color: rgba(76, 83, 103, 0.25);
+  color: var(--text-primary);
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.markdown-content :deep([class*='code-block'] button:active),
+.markdown-content :deep([class*='CodeBlock'] button:active),
+.markdown-content :deep(.code-block-header button:active),
+.markdown-content :deep(.code-block-actions button:active),
+.markdown-content :deep(.code-header button:active),
+.markdown-content :deep(.code-actions button:active),
+.markdown-content :deep(button[class*='copy']:active),
+.markdown-content :deep(button[class*='preview']:active),
+.markdown-content :deep(button[class*='Copy']:active),
+.markdown-content :deep(button[class*='Preview']:active),
+.markdown-content :deep([class*='monaco'] button:active),
+.markdown-content :deep([class*='Monaco'] button:active) {
+  transform: translateY(0);
+}
+
+.markdown-content :deep([class*='code-block'] button:disabled),
+.markdown-content :deep([class*='CodeBlock'] button:disabled),
+.markdown-content :deep(.code-block-header button:disabled),
+.markdown-content :deep(.code-block-actions button:disabled),
+.markdown-content :deep(.code-header button:disabled),
+.markdown-content :deep(.code-actions button:disabled),
+.markdown-content :deep(button[class*='copy']:disabled),
+.markdown-content :deep(button[class*='preview']:disabled),
+.markdown-content :deep(button[class*='Copy']:disabled),
+.markdown-content :deep(button[class*='Preview']:disabled),
+.markdown-content :deep([class*='monaco'] button:disabled),
+.markdown-content :deep([class*='Monaco'] button:disabled) {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* 代码块头部容器样式 */
+.markdown-content :deep([class*='code-block-header']),
+.markdown-content :deep([class*='CodeBlock-header']),
+.markdown-content :deep([class*='code-header']) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(76, 83, 103, 0.15);
 }
 </style>
