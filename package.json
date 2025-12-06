@@ -13,7 +13,13 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix --cache",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "electron:dev": "vite",
+    "electron:dev:full": "concurrently \"npm run backend:dev\" \"npm run electron:dev\"",
+    "electron:build": "npm run build && electron-builder",
+    "backend:dev": "cd ../Lunarys && mvn spring-boot:run",
+    "backend:build": "cd ../Lunarys && mvn clean package -DskipTests",
+    "build:all": "npm run backend:build && npm run build && electron-builder"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
@@ -45,6 +51,9 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/tsconfig": "^0.8.1",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.37.0",
     "eslint-plugin-vue": "~10.5.0",
     "jiti": "^2.6.1",
@@ -52,7 +61,60 @@
     "prettier": "3.6.2",
     "typescript": "~5.9.0",
     "vite": "^7.1.11",
+    "vite-plugin-electron": "^0.28.0",
     "vite-plugin-vue-devtools": "^8.0.3",
-    "vue-tsc": "^3.1.1"
+    "vue-tsc": "^3.1.1",
+    "wait-on": "^9.0.3"
+  },
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "space.arctain.lunarys",
+    "productName": "Lunarys",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../Lunarys/target/Lunarys-0.0.1-SNAPSHOT.jar",
+        "to": "backend/Lunarys-0.0.1-SNAPSHOT.jar",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
