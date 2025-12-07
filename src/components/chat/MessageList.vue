@@ -11,7 +11,15 @@ interface Props {
   isLoading?: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  retry: [message: Message]
+}>()
+
+const handleRetry = (message: Message) => {
+  emit('retry', message)
+}
 
 const settingsStore = useSettingsStore()
 
@@ -57,6 +65,7 @@ const aiAvatarBg = computed(() => settingsStore.settings.avatars?.aiAvatarBg)
         :ai-avatar="aiAvatar"
         :user-avatar-bg="userAvatarBg"
         :ai-avatar-bg="aiAvatarBg"
+        @retry="handleRetry"
       />
     </TransitionGroup>
 

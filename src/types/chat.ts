@@ -1,7 +1,7 @@
 // src/types/chat.ts - 更新类型定义
 export interface Message {
   id?: number
-  conversationId: number
+  conversationId?: number
   role: 'user' | 'assistant' | 'reasoning'
   content: string
   createdAt?: string
@@ -24,6 +24,7 @@ export interface Conversation {
 export interface ChatRequest {
   conversationId?: number
   model: string
+  message?: string // 当前消息内容（可选，用于向后兼容）
   messages: Array<{
     role: string
     content: string

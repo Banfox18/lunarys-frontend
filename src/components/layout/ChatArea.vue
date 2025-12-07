@@ -1,6 +1,7 @@
 <!-- src/components/layout/ChatArea.vue -->
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue'
+import type { Message } from '@/types/chat'
 import { useChatStore } from '@/stores/chat'
 import MessageList from '@/components/chat/MessageList.vue'
 import InputArea from '@/components/chat/InputArea.vue'
@@ -8,6 +9,7 @@ import InputArea from '@/components/chat/InputArea.vue'
 const chatStore = useChatStore()
 
 const messagesEndRef = ref<HTMLElement>()
+const inputAreaRef = ref<InstanceType<typeof InputArea>>()
 
 // 自动滚动到底部
 const scrollToBottom = () => {
@@ -22,6 +24,20 @@ watch(() => chatStore.messages.length, scrollToBottom, { immediate: true })
 const handleSendMessage = async (content: string) => {
   await chatStore.sendMessage(content)
 }
+
+// 处理撤回/重新生成/重新编辑
+const handleRetry = async (message: Message) => {
+  if (message.role === 'user') {
+    // 用户消息：重新编辑 - 将内容放回输入框
+    const content = chatStore.retryUserMessage(message)
+    if (content && inputAreaRef.value) {
+      inputAreaRef.value.setInputText(content)
+    }
+  } else if (message.role === 'assistant') {
+    // AI消息：重新生成回复
+    await chatStore.retryAssistantMessage(message)
+  }
+}
 </script>
 
 <template>
@@ -30,13 +46,21 @@ const handleSendMessage = async (content: string) => {
     <div class="chat-content">
       <!-- 消息列表区域 -->
       <div class="messages-container">
-        <MessageList :messages="chatStore.messages" :is-loading="chatStore.isLoading" />
+        <MessageList 
+          :messages="chatStore.messages" 
+          :is-loading="chatStore.isLoading" 
+          @retry="handleRetry"
+        />
         <div ref="messagesEndRef" />
       </div>
 
       <!-- 输入区域 -->
       <div class="input-container">
-        <InputArea :disabled="chatStore.isLoading" @send="handleSendMessage" />
+        <InputArea 
+          ref="inputAreaRef"
+          :disabled="chatStore.isLoading" 
+          @send="handleSendMessage" 
+        />
       </div>
     </div>
   </div>

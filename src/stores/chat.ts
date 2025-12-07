@@ -29,8 +29,8 @@ export const useChatStore = defineStore('chat', () => {
           model: 'deepseek-chat',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          preview: '欢迎使用Lunarys!'
-        }
+          preview: '欢迎使用Lunarys!',
+        },
       ]
     }
   }
@@ -43,7 +43,7 @@ export const useChatStore = defineStore('chat', () => {
       model: settingsStore.model,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      preview: '开始新的对话'
+      preview: '开始新的对话',
     }
 
     conversations.value.unshift(tempConversation)
@@ -53,7 +53,7 @@ export const useChatStore = defineStore('chat', () => {
     return tempConversation
   }
 
-// src/stores/chat.ts - 修改switchConversation
+  // src/stores/chat.ts - 修改switchConversation
   const switchConversation = async (conversationId: number) => {
     // 只切换正式会话，不切换临时会话
     if (conversationId <= 0) {
@@ -61,7 +61,7 @@ export const useChatStore = defineStore('chat', () => {
       return
     }
 
-    const conversation = conversations.value.find(c => c.id === conversationId)
+    const conversation = conversations.value.find((c) => c.id === conversationId)
     if (conversation) {
       currentConversation.value = conversation
       // 加载该会话的消息历史
@@ -73,7 +73,6 @@ export const useChatStore = defineStore('chat', () => {
       }
     }
   }
-
 
   // 停止当前流式响应
   const stopStreaming = () => {
@@ -99,18 +98,26 @@ export const useChatStore = defineStore('chat', () => {
     // 添加用户消息
     const userMessage: Message = {
       id: Date.now(),
+      conversationId:
+        currentConversation.value?.id && currentConversation.value.id > 0
+          ? currentConversation.value.id
+          : undefined,
       role: 'user',
       content: content.trim(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     }
     messages.value.push(userMessage)
 
     // 添加AI占位消息
     const aiMessage: Message = {
       id: Date.now() + 1,
+      conversationId:
+        currentConversation.value?.id && currentConversation.value.id > 0
+          ? currentConversation.value.id
+          : undefined,
       role: 'assistant',
       content: '',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     }
     messages.value.push(aiMessage)
 
@@ -122,23 +129,25 @@ export const useChatStore = defineStore('chat', () => {
     // 根据设置选择传输模式
     if (settings.enableStreaming) {
       console.log('[Response mode] Streaming')
-      await sendStreamingMessage(content, aiMessage)
+      await sendStreamingMessage(content)
     } else {
       console.log('[Response mode] NonStreaming')
-      await sendNonStreamingMessage(content, aiMessage)
+      await sendNonStreamingMessage(content)
     }
   }
 
-// 提取流式发送逻辑到单独函数
-  const sendStreamingMessage = async (content: string, aiMessage: Message) => {
+  // 提取流式发送逻辑到单独函数
+  const sendStreamingMessage = async (content: string) => {
+    if (!currentConversation.value) return
+
     const request: ChatRequest = {
       message: content,
-      conversationId: currentConversation.value!.id > 0 ? currentConversation.value!.id : undefined,
+      conversationId: currentConversation.value.id > 0 ? currentConversation.value.id : undefined,
       model: settingsStore.model,
-      messages: messages.value.slice(0, -1).map(msg => ({
+      messages: messages.value.slice(0, -1).map((msg) => ({
         role: msg.role,
-        content: msg.content
-      }))
+        content: msg.content,
+      })),
     }
 
     try {
@@ -149,12 +158,16 @@ export const useChatStore = defineStore('chat', () => {
         // 内容回调 - 最终答案
         (contentChunk) => {
           const lastIndex = messages.value.length - 1
-          messages.value[lastIndex].content += contentChunk
+          if (messages.value[lastIndex]) {
+            messages.value[lastIndex].content += contentChunk
+          }
         },
         // 错误回调
         (errorMessage) => {
           const lastIndex = messages.value.length - 1
-          messages.value[lastIndex].content = `错误: ${errorMessage}`
+          if (messages.value[lastIndex]) {
+            messages.value[lastIndex].content = `错误: ${errorMessage}`
+          }
           isLoading.value = false
           abortController.value = null
         },
@@ -175,31 +188,37 @@ export const useChatStore = defineStore('chat', () => {
 
           // 可选：在消息中存储思考过程
           const lastIndex = messages.value.length - 1
-          if (!messages.value[lastIndex].metadata) {
-            messages.value[lastIndex].metadata = {}
+          if (messages.value[lastIndex]) {
+            if (!messages.value[lastIndex].metadata) {
+              messages.value[lastIndex].metadata = {}
+            }
+            messages.value[lastIndex].metadata!.reasoningContent = reasoningContent
           }
-          messages.value[lastIndex].metadata!.reasoningContent = reasoningContent
-        }
+        },
       )
     } catch (error) {
       console.error('流式请求失败:', error)
       const lastIndex = messages.value.length - 1
-      messages.value[lastIndex].content = `请求失败: ${error.message}`
+      if (messages.value[lastIndex]) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        messages.value[lastIndex].content = `请求失败: ${errorMessage}`
+      }
       isLoading.value = false
     }
   }
 
+  // 添加非流式发送函数
+  const sendNonStreamingMessage = async (content: string) => {
+    if (!currentConversation.value) return
 
-// 添加非流式发送函数
-  const sendNonStreamingMessage = async (content: string, aiMessage: Message) => {
     const request: ChatRequest = {
       message: content,
-      conversationId: currentConversation.value!.id > 0 ? currentConversation.value!.id : undefined,
+      conversationId: currentConversation.value.id > 0 ? currentConversation.value.id : undefined,
       model: settingsStore.model,
-      messages: messages.value.slice(0, -1).map(msg => ({
+      messages: messages.value.slice(0, -1).map((msg) => ({
         role: msg.role,
-        content: msg.content
-      }))
+        content: msg.content,
+      })),
     }
 
     try {
@@ -207,17 +226,21 @@ export const useChatStore = defineStore('chat', () => {
 
       // 更新AI消息内容
       const lastIndex = messages.value.length - 1
-      messages.value[lastIndex].content = response.content
+      if (messages.value[lastIndex]) {
+        messages.value[lastIndex].content = response.content
+      }
 
       // 更新会话ID
       if (currentConversation.value && currentConversation.value.id === -1) {
         currentConversation.value.id = response.conversationId
       }
-
     } catch (error) {
       console.error('非流式请求失败:', error)
       const lastIndex = messages.value.length - 1
-      messages.value[lastIndex].content = `请求失败: ${error.message}`
+      if (messages.value[lastIndex]) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        messages.value[lastIndex].content = `请求失败: ${errorMessage}`
+      }
     } finally {
       isLoading.value = false
     }
@@ -230,7 +253,7 @@ export const useChatStore = defineStore('chat', () => {
       await chatService.deleteConversation(conversationId)
 
       // 从前端状态中移除会话
-      const index = conversations.value.findIndex(c => c.id === conversationId)
+      const index = conversations.value.findIndex((c) => c.id === conversationId)
       if (index !== -1) {
         conversations.value.splice(index, 1)
       }
@@ -248,6 +271,89 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // 撤回用户消息 - 删除消息并返回内容用于重新编辑
+  const retryUserMessage = (message: Message): string | null => {
+    if (message.role !== 'user') return null
+
+    // 找到该用户消息在消息列表中的索引
+    const messageIndex = messages.value.findIndex(
+      (msg) =>
+        msg.id === message.id || (msg.createdAt === message.createdAt && msg.role === 'user'),
+    )
+
+    if (messageIndex === -1) {
+      console.warn('未找到要撤回的用户消息')
+      return null
+    }
+
+    // 删除该用户消息及其后续的所有消息（包括对应的AI回复）
+    // 找到下一个用户消息的索引，或者直接删除到末尾
+    let nextUserMessageIndex = -1
+    for (let i = messageIndex + 1; i < messages.value.length; i++) {
+      if (messages.value[i]?.role === 'user') {
+        nextUserMessageIndex = i
+        break
+      }
+    }
+
+    // 删除从该消息开始到下一个用户消息之前的所有消息
+    if (nextUserMessageIndex !== -1) {
+      messages.value.splice(messageIndex, nextUserMessageIndex - messageIndex)
+    } else {
+      // 如果没有下一个用户消息，删除从该消息开始的所有后续消息
+      messages.value.splice(messageIndex)
+    }
+
+    return message.content
+  }
+
+  // 撤回AI消息 - 重新生成回复
+  const retryAssistantMessage = async (message: Message) => {
+    if (message.role !== 'assistant') return
+
+    // 停止当前流式响应
+    stopStreaming()
+
+    // 找到该AI消息在消息列表中的索引
+    const messageIndex = messages.value.findIndex(
+      (msg) =>
+        msg.id === message.id || (msg.createdAt === message.createdAt && msg.role === 'assistant'),
+    )
+
+    if (messageIndex === -1) {
+      console.warn('未找到要撤回的AI消息')
+      return
+    }
+
+    // 找到对应的用户消息（应该是前一条消息）
+    let userMessageIndex = -1
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (messages.value[i]?.role === 'user') {
+        userMessageIndex = i
+        break
+      }
+    }
+
+    if (userMessageIndex === -1) {
+      console.warn('未找到对应的用户消息')
+      return
+    }
+
+    // 获取用户消息内容
+    const userMessage = messages.value[userMessageIndex]
+    if (!userMessage) {
+      console.warn('用户消息不存在')
+      return
+    }
+
+    const userMessageContent = userMessage.content
+
+    // 删除从该AI消息开始的所有后续消息（包括该AI消息）
+    messages.value.splice(messageIndex)
+
+    // 重新发送用户消息
+    await sendMessage(userMessageContent)
+  }
 
   return {
     // 状态
@@ -262,6 +368,8 @@ export const useChatStore = defineStore('chat', () => {
     switchConversation,
     sendMessage,
     stopStreaming,
-    deleteConversation
+    deleteConversation,
+    retryUserMessage,
+    retryAssistantMessage,
   }
 })

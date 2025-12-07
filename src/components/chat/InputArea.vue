@@ -72,6 +72,22 @@ const adjustTextareaHeight = () => {
 const handleInput = () => {
   adjustTextareaHeight()
 }
+
+// 设置输入内容（用于重新编辑）
+const setInputText = (text: string) => {
+  inputText.value = text
+  nextTick(() => {
+    adjustTextareaHeight()
+    if (textareaRef.value) {
+      textareaRef.value.focus()
+    }
+  })
+}
+
+// 暴露方法给父组件
+defineExpose({
+  setInputText
+})
 </script>
 
 <template>

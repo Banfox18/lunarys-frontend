@@ -84,6 +84,16 @@
                 <component :is="copyIconComponent" />
               </el-icon>
             </button>
+            <button
+              class="footer-button retry-button"
+              @click="handleRetry"
+              :title="'重新编辑输出'"
+              :disabled="isStreaming"
+            >
+              <el-icon>
+                <EditPen />
+              </el-icon>
+            </button>
           </div>
         </template>
         <!-- AI 消息的 Footer：操作按钮在左，时间在右 -->
@@ -97,6 +107,16 @@
             >
               <el-icon>
                 <component :is="copyIconComponent" />
+              </el-icon>
+            </button>
+            <button
+              class="footer-button retry-button"
+              @click="handleRetry"
+              :title="'重新生成回复'"
+              :disabled="isStreaming"
+            >
+              <el-icon>
+                <RefreshLeft />
               </el-icon>
             </button>
           </div>
@@ -114,7 +134,13 @@ import { ref, computed, withDefaults } from 'vue'
 import type { Message } from '@/types/chat'
 import MarkdownRenderer from './MarkdownRenderer.vue'
 import ReasoningProcess from './ReasoningProcess.vue'
-import { DocumentCopy, Check, CircleCloseFilled } from '@element-plus/icons-vue'
+import {
+  DocumentCopy,
+  Check,
+  CircleCloseFilled,
+  RefreshLeft,
+  EditPen,
+} from '@element-plus/icons-vue'
 
 interface Props {
   message: Message
@@ -132,6 +158,10 @@ const props = withDefaults(defineProps<Props>(), {
   userAvatarBg: undefined,
   aiAvatarBg: undefined,
 })
+
+const emit = defineEmits<{
+  retry: [message: Message]
+}>()
 
 const isUser = computed(() => props.message.role === 'user')
 const copyStatus = ref<'idle' | 'success' | 'error'>('idle')
@@ -204,6 +234,12 @@ const copyButtonText = computed(() => {
       return '复制文本'
   }
 })
+
+// 处理撤回/重新生成/重新编辑
+const handleRetry = () => {
+  if (props.isStreaming) return
+  emit('retry', props.message)
+}
 // 时间格式化函数
 const formatMessageTime = (timestamp: number | string | Date): string => {
   const date = new Date(timestamp)
